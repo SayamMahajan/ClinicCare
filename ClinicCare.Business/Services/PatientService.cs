@@ -1,6 +1,7 @@
-﻿using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.DataAccess.Repositories.Interfaces;
+﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
+using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Patient;
 
 namespace ClinicCare.Business.Services
@@ -28,10 +29,12 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<PatientResponseDto?> GetByIdAsync(int id)
+        public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
         {
             var patient = await _repo.GetByIdAsync(id);
-            if (patient is null) return null;
+
+            if (patient is null)
+                throw new NotFoundException($"Patient with id {id} not found.");
 
             return new PatientResponseDto
             {
@@ -43,10 +46,12 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task UpdateAsync(int id, PatientUpdateDto dto)
+        public async Task UpdateAsync(Guid id, PatientUpdateDto dto)
         {
             var patient = await _repo.GetByIdAsync(id);
-            if (patient is null) return;
+
+            if (patient is null)
+                throw new NotFoundException($"Patient with id {id} not found.");
 
             patient.FirstName = dto.FirstName;
             patient.LastName = dto.LastName;
@@ -57,10 +62,12 @@ namespace ClinicCare.Business.Services
             await _repo.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var patient = await _repo.GetByIdAsync(id);
-            if (patient is null) return;
+
+            if (patient is null)
+                throw new NotFoundException($"Patient with id {id} not found.");
 
             await _repo.Delete(id);
             await _repo.SaveChangesAsync();

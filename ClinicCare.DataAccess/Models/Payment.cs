@@ -7,17 +7,17 @@ namespace ClinicCare.DataAccess.Models
     public class Payment
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [Precision(10, 2)]
         public decimal Amount { get; set; }
 
         [Required]
-        public int RecipientId { get; set; }
+        public Guid RecipientId { get; set; }
 
         [Required]
-        public int SenderId { get; set; } // PatientId
+        public Guid SenderId { get; set; } // PatientId
 
         // Navigation properties
         [ForeignKey(nameof(RecipientId))]

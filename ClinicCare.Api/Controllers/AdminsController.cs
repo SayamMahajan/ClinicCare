@@ -1,4 +1,5 @@
-﻿using ClinicCare.Business.Services.Interfaces;
+﻿using ClinicCare.Api.Middlewares;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Shared.DTOs.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,40 +19,44 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllAsync()
         {
             var admins = await _adminService.GetAllAsync();
             return Ok(admins);
         }
 
-        [HttpGet("{id:int}", Name = "GetAdminById")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        [HttpGet("{id}", Name = "GetAdminById")]
+        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var admin = await _adminService.GetByIdAsync(id);
-            if (admin is null)
-                return NotFound();
-
             return Ok(admin);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] AdminUpdateDto dto)
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] AdminUpdateDto dto)
         {
-            var admin = await _adminService.GetByIdAsync(id);
-            if (admin is null)
-                return NotFound();
-
             await _adminService.UpdateAsync(id, dto);
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteAsync(int id)
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteAsync(Guid id)
         {
-            var admin = await _adminService.GetByIdAsync(id);
-            if (admin is null)
-                return NotFound();
-
             await _adminService.DeleteAsync(id);
             return NoContent();
         }

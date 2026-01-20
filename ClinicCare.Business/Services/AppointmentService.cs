@@ -2,7 +2,7 @@
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Appointment;
-using ClinicCare.Shared.DTOs.Enums;
+using ClinicCare.Shared.Enums;
 
 namespace ClinicCare.Business.Services
 {
@@ -30,7 +30,7 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<AppointmentResponseDto?> GetByIdAsync(int id)
+        public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
         {
             var appointment = await _repo.GetByIdAsync(id);
             if (appointment is null) return null;
@@ -46,7 +46,7 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task<IEnumerable<AppointmentResponseDto>> GetByDoctorAsync(int doctorId)
+        public async Task<IEnumerable<AppointmentResponseDto>> GetByDoctorAsync(Guid doctorId)
         {
             var appointments = await _repo.FindAsync(a => a.DoctorId == doctorId);
 
@@ -61,7 +61,7 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<IEnumerable<AppointmentResponseDto>> GetByPatientAsync(int patientId)
+        public async Task<IEnumerable<AppointmentResponseDto>> GetByPatientAsync(Guid patientId)
         {
             var appointments = await _repo.FindAsync(a => a.PatientId == patientId);
 
@@ -76,10 +76,11 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<int> CreateAsync(AppointmentCreateDto dto)
+        public async Task<Guid> CreateAsync(AppointmentCreateDto dto)
         {
             var appointment = new Appointment
             {
+                Id = Guid.NewGuid(),
                 PatientId = dto.PatientId,
                 DoctorId = dto.DoctorId,
                 Date = dto.Date,
@@ -93,7 +94,7 @@ namespace ClinicCare.Business.Services
             return appointment.Id;
         }
 
-        public async Task UpdateStatusAsync(int id, AppointmentStatus status)
+        public async Task UpdateStatusAsync(Guid id, AppointmentStatus status)
         {
             var appt = await _repo.GetByIdAsync(id);
             if (appt is null) throw new Exception("Appointment not found");
@@ -102,7 +103,7 @@ namespace ClinicCare.Business.Services
             await _repo.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var appointment = await _repo.GetByIdAsync(id);
             if (appointment is null) return;

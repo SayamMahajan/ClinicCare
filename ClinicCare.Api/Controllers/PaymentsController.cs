@@ -1,6 +1,6 @@
 ﻿using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Enums;
 using ClinicCare.Shared.DTOs.Payment;
+using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicCare.Api.Controllers
@@ -29,33 +29,30 @@ namespace ClinicCare.Api.Controllers
             return Ok(payments);
         }
 
-        [HttpGet("{id:int}", Name = "GetPaymentById")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        [HttpGet("{id}", Name = "GetPaymentById")]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var payment = await _paymentService.GetByIdAsync(id);
-            if (payment is null)
-                return NotFound();
-
             return Ok(payment);
         }
 
-        [HttpGet("recipient/{id:int}")]
-        public async Task<IActionResult> GetByRecipientAsync(int id)
+        [HttpGet("recipient/{id}")]
+        public async Task<IActionResult> GetByRecipientAsync(Guid id)
         {
-            var recipient = await _doctorService.GetByIdAsync(id);
-            if (recipient is null || recipient.Role != EmployeeRole.Doctor)
-                return BadRequest();
+            //    var recipient = await _doctorService.GetByIdAsync(id);
+            //    if (recipient is null || recipient.Role != EmployeeRole.Doctor)
+            //        return BadRequest();
 
             var payments = await _paymentService.GetByRecipientAsync(id);
             return Ok(payments);
         }
 
-        [HttpGet("sender/{id:int}")]
-        public async Task<IActionResult> GetBySenderAsync(int id)
+        [HttpGet("sender/{id}")]
+        public async Task<IActionResult> GetBySenderAsync(Guid id)
         {
-            var patient = await _patientService.GetByIdAsync(id);
-            if (patient is null)
-                return BadRequest();
+            //var patient = await _patientService.GetByIdAsync(id);
+            //if (patient is null)
+            //    return BadRequest();
 
             var payments = await _paymentService.GetBySenderAsync(id);
             return Ok(payments);
@@ -67,16 +64,5 @@ namespace ClinicCare.Api.Controllers
             var id = await _paymentService.CreateAsync(dto);
             return CreatedAtRoute("GetPaymentById", new { id }, null);
         }
-
-        //[HttpDelete("{id:int}")]
-        //public async Task<IActionResult> DeleteAsync(int id)
-        //{
-        //    var payment = await _paymentService.GetByIdAsync(id);
-        //    if (payment is null)
-        //        return NotFound();
-
-        //    await _paymentService.DeleteAsync(id);
-        //    return NoContent(); ;
-        //}
     }
 }

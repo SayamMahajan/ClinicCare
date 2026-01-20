@@ -2,9 +2,9 @@
 {
     public class PrescriptionResponseDto
     {
-        public int Id { get; set; }
-        public int PatientId { get; set; }
-        public int DoctorId { get; set; }
+        public Guid Id { get; set; }
+        public Guid PatientId { get; set; }
+        public Guid DoctorId { get; set; }
         public List<MedicationDto> Description { get; set; } = new();
     }
 }

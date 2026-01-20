@@ -6,9 +6,9 @@ namespace ClinicCare.Business.Services.Interfaces
     {
         Task<PatientAuthResponseDto> LoginPatientAsync(LoginRequestDto dto);
         Task<EmployeeAuthResponseDto> LoginEmployeeAsync(LoginRequestDto dto);
-        Task<int> RegisterPatientAsync(PatientRegisterDto dto);
-        Task<int> RegisterDoctorAsync(DoctorRegisterDto dto);
-        Task<int> RegisterAdminAsync(AdminRegisterDto dto);
+        Task<Guid> RegisterPatientAsync(PatientRegisterDto dto);
+        Task<Guid> RegisterDoctorAsync(DoctorRegisterDto dto);
+        Task<Guid> RegisterAdminAsync(AdminRegisterDto dto);
 
     }
 }

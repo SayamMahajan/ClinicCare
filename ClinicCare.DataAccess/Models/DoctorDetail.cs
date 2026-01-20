@@ -4,34 +4,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicCare.DataAccess.Models
 {
-    public class DoctorDetails
+    public class DoctorDetail
     {
         [Key]
-        [ForeignKey(nameof(Employee))]
-        public int DoctorId { get; set; }
+        public Guid DoctorId { get; set; }
 
         [Required]
         [Precision(10, 2)]
         public decimal Fee { get; set; }
 
         [Required]
-        [MaxLength(100)]
-        public string SpecialistType { get; set; } = string.Empty;
+        public Guid SpecializationId { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime DOB { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime FirstPracticeDate { get; set; }
 
         [Required]
         [Phone]
-        public string Phone { get; set; } = string.Empty;
+        [MaxLength(15)]
+        public string Phone { get; set; }
 
         // Navigation property
         [ForeignKey(nameof(DoctorId))]
         public Employee Employee { get; set; }
+
+        [ForeignKey(nameof(SpecializationId))]
+        public DoctorSpecialization DoctorSpecialization { get; set; }
     }
 }

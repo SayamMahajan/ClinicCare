@@ -1,6 +1,6 @@
 ﻿using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Enums;
 using ClinicCare.Shared.DTOs.Prescription;
+using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,33 +32,26 @@ namespace ClinicCare.Api.Controllers
             return Ok(prescriptions);
         }
 
-        [HttpGet("{id:int}", Name = "GetPrescriptionById")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        [HttpGet("{id}", Name = "GetPrescriptionById")]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var prescription = await _prescriptionService.GetByIdAsync(id);
-            if (prescription is null)
-                return NotFound();
-
             return Ok(prescription);
         }
 
-        [HttpGet("patient/{id:int}")]
-        public async Task<IActionResult> GetByPatientIdAsync(int id)
+        [HttpGet("patient/{id}")]
+        public async Task<IActionResult> GetByPatientIdAsync(Guid id)
         {
-            var patient = await _patientService.GetByIdAsync(id);
-            if (patient is null)
-                return BadRequest();
-
             var prescriptions = await _prescriptionService.GetByPatientIdAsync(id);
             return Ok(prescriptions);
         }
 
-        [HttpGet("doctor/{id:int}")]
-        public async Task<IActionResult> GetByDoctorIdAsync(int id)
+        [HttpGet("doctor/{id}")]
+        public async Task<IActionResult> GetByDoctorIdAsync(Guid id)
         {
-            var doctor = await _doctorService.GetByIdAsync(id);
-            if (doctor is null || doctor.Role != EmployeeRole.Doctor)
-                return BadRequest();
+            //var doctor = await _doctorService.GetByIdAsync(id);
+            //if (doctor is null || doctor.Role != EmployeeRole.Doctor)
+            //    return BadRequest();
 
             var prescriptions = await _prescriptionService.GetByDoctorIdAsync(id);
             return Ok(prescriptions);
@@ -71,12 +64,12 @@ namespace ClinicCare.Api.Controllers
             return CreatedAtRoute("GetPrescriptionById", new { id}, null);
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteAsync(int id)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAsync(Guid id)
         {
-            var prescription = await _prescriptionService.GetByIdAsync(id);
-            if (prescription is null)
-                return NotFound();
+            //    var prescription = await _prescriptionService.GetByIdAsync(id);
+            //    if (prescription is null)
+            //        return NotFound();
 
             await _prescriptionService.DeleteAsync(id);
             return NoContent(); ;

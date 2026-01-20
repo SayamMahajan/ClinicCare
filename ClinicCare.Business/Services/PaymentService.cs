@@ -28,7 +28,7 @@ namespace ClinicCare.Business.Services
             });
         }
            
-        public async Task<PaymentResponseDto?> GetByIdAsync(int id)
+        public async Task<PaymentResponseDto?> GetByIdAsync(Guid id)
         {
             var payment = await _repo.GetByIdAsync(id);
             if (payment is null) return null;
@@ -42,7 +42,7 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task<IEnumerable<PaymentResponseDto>> GetByRecipientAsync(int recipientId)
+        public async Task<IEnumerable<PaymentResponseDto>> GetByRecipientAsync(Guid recipientId)
         {
             var payments = await _repo.FindAsync(p => p.RecipientId == recipientId);
 
@@ -55,7 +55,7 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<IEnumerable<PaymentResponseDto>> GetBySenderAsync(int senderId)
+        public async Task<IEnumerable<PaymentResponseDto>> GetBySenderAsync(Guid senderId)
         {
             var payments = await _repo.FindAsync(p => p.SenderId == senderId);
 
@@ -68,11 +68,11 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<int> CreateAsync(PaymentCreateDto dto)
+        public async Task<Guid> CreateAsync(PaymentCreateDto dto)
         {
             var payment = new Payment
             {
-                Id = dto.Id,
+                Id = Guid.NewGuid(),
                 Amount = dto.Amount,
                 RecipientId = dto.RecipientId,
                 SenderId = dto.SenderId,
@@ -83,14 +83,5 @@ namespace ClinicCare.Business.Services
 
             return payment.Id;
         }
-
-        //public async Task DeleteAsync(int id)
-        //{
-        //    var payment = await _repo.GetByIdAsync(id);
-        //    if (payment is null) return;
-
-        //    await _repo.Delete(id);
-        //    await _repo.SaveChangesAsync();
-        //}
     }
 }

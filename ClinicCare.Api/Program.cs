@@ -1,3 +1,4 @@
+using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Business.Utils;
@@ -7,7 +8,9 @@ using ClinicCare.DataAccess.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace ClinicCare.Api
 {
@@ -17,7 +20,13 @@ namespace ClinicCare.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(
+                        new JsonStringEnumConverter()
+                    );
+                });
 
             builder.Services.AddDbContextPool<AppDbContext>(
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicDBConnection")));
@@ -35,7 +44,33 @@ namespace ClinicCare.Api
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(opt =>
+            {
+                // JWT Swagger Support
+                opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using Bearer scheme. Example: \"{token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer"
+                });
+
+                opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                    Array.Empty<string>()
+                }
+                });
+            });
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -64,6 +99,8 @@ namespace ClinicCare.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
 

@@ -6,17 +6,28 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ClinicCare.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "DoctorSpecializations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DoctorSpecializations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Employees",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Role = table.Column<int>(type: "int", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -33,8 +44,7 @@ namespace ClinicCare.DataAccess.Migrations
                 name: "Patients",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     DOB = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -58,9 +68,9 @@ namespace ClinicCare.DataAccess.Migrations
                 name: "DoctorDetails",
                 columns: table => new
                 {
-                    DoctorId = table.Column<int>(type: "int", nullable: false),
+                    DoctorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Fee = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
-                    SpecialistType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SpecializationId = table.Column<Guid>(type: "uniqueidentifier", maxLength: 100, nullable: false),
                     DOB = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FirstPracticeDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -68,6 +78,12 @@ namespace ClinicCare.DataAccess.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DoctorDetails", x => x.DoctorId);
+                    table.ForeignKey(
+                        name: "FK_DoctorDetails_DoctorSpecializations_SpecializationId",
+                        column: x => x.SpecializationId,
+                        principalTable: "DoctorSpecializations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_DoctorDetails_Employees_DoctorId",
                         column: x => x.DoctorId,
@@ -80,11 +96,10 @@ namespace ClinicCare.DataAccess.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(10,2)", precision: 10, scale: 2, nullable: false),
-                    RecipientId = table.Column<int>(type: "int", nullable: false),
-                    SenderId = table.Column<int>(type: "int", nullable: false)
+                    RecipientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -107,10 +122,9 @@ namespace ClinicCare.DataAccess.Migrations
                 name: "Prescriptions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PatientId = table.Column<int>(type: "int", nullable: false),
-                    DoctorId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DoctorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false)
                 },
                 constraints: table =>
@@ -134,15 +148,14 @@ namespace ClinicCare.DataAccess.Migrations
                 name: "Appointments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PatientId = table.Column<int>(type: "int", nullable: false),
-                    DoctorId = table.Column<int>(type: "int", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PatientId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DoctorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     Date = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TimeSlot = table.Column<int>(type: "int", nullable: false),
-                    PaymentId = table.Column<int>(type: "int", nullable: true),
-                    PrescriptionId = table.Column<int>(type: "int", nullable: true)
+                    PaymentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PrescriptionId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -192,6 +205,11 @@ namespace ClinicCare.DataAccess.Migrations
                 column: "PrescriptionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DoctorDetails_SpecializationId",
+                table: "DoctorDetails",
+                column: "SpecializationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Employees_Email",
                 table: "Employees",
                 column: "Email",
@@ -238,6 +256,9 @@ namespace ClinicCare.DataAccess.Migrations
 
             migrationBuilder.DropTable(
                 name: "Prescriptions");
+
+            migrationBuilder.DropTable(
+                name: "DoctorSpecializations");
 
             migrationBuilder.DropTable(
                 name: "Employees");

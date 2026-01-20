@@ -1,4 +1,4 @@
-﻿using ClinicCare.Shared.DTOs.Enums;
+﻿using ClinicCare.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -7,29 +7,26 @@ namespace ClinicCare.DataAccess.Models
     public class Appointment
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [Required]
-        public int DoctorId { get; set; } 
+        public Guid DoctorId { get; set; } 
 
         [Required]
-        [EnumDataType(typeof(AppointmentStatus))]
         public AppointmentStatus Status { get; set; } 
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
         [Required]
-        [EnumDataType(typeof(TimeSlotType))]
         public TimeSlotType TimeSlot { get; set; }
 
-        public int? PaymentId { get; set; }
+        public Guid? PaymentId { get; set; }
 
-        public int? PrescriptionId { get; set; }
+        public Guid? PrescriptionId { get; set; }
 
         //Navigation properties
         [ForeignKey(nameof(PatientId))]

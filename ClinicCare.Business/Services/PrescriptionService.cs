@@ -35,7 +35,7 @@ namespace ClinicCare.Business.Services
             return dtos;
         }
 
-        public async Task<PrescriptionResponseDto?> GetByIdAsync(int id)
+        public async Task<PrescriptionResponseDto?> GetByIdAsync(Guid id)
         {
             var prescription = await _repo.GetByIdAsync(id);
             if (prescription == null) return null;
@@ -51,7 +51,7 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetByPatientIdAsync(int patientId)
+        public async Task<IEnumerable<PrescriptionResponseDto>> GetByPatientIdAsync(Guid patientId)
         {
             var prescriptions = await _repo.FindAsync(p => p.PatientId == patientId);
             var dtos = new List<PrescriptionResponseDto>();
@@ -71,7 +71,7 @@ namespace ClinicCare.Business.Services
             return dtos;
         }
 
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetByDoctorIdAsync(int doctorId)
+        public async Task<IEnumerable<PrescriptionResponseDto>> GetByDoctorIdAsync(Guid doctorId)
         {
             var prescriptions = await _repo.FindAsync(p => p.DoctorId == doctorId);
             var dtos = new List<PrescriptionResponseDto>();
@@ -91,10 +91,11 @@ namespace ClinicCare.Business.Services
             return dtos;
         }
 
-        public async Task<int> CreateAsync(PrescriptionCreateDto dto)
+        public async Task<Guid> CreateAsync(PrescriptionCreateDto dto)
         {
             var prescription = new Prescription
             {
+                Id = Guid.NewGuid(),
                 PatientId = dto.PatientId,
                 DoctorId = dto.DoctorId,
                 Description = JsonSerializer.Serialize(dto.Description)
@@ -107,7 +108,7 @@ namespace ClinicCare.Business.Services
             return prescription.Id;
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var prescription = await _repo.GetByIdAsync(id);
             if (prescription == null) return;

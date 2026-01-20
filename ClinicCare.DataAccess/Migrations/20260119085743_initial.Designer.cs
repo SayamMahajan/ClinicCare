@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClinicCare.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260118123100_Initial")]
-    partial class Initial
+    [Migration("20260119085743_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,26 +27,24 @@ namespace ClinicCare.DataAccess.Migrations
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Appointment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("PrescriptionId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PrescriptionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -67,10 +65,10 @@ namespace ClinicCare.DataAccess.Migrations
                     b.ToTable("Appointments");
                 });
 
-            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorDetails", b =>
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorDetail", b =>
                 {
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DOB")
                         .HasColumnType("datetime2");
@@ -86,23 +84,37 @@ namespace ClinicCare.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SpecialistType")
-                        .IsRequired()
+                    b.Property<Guid>("SpecializationId")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("DoctorId");
+
+                    b.HasIndex("SpecializationId");
 
                     b.ToTable("DoctorDetails");
                 });
 
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorSpecialization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DoctorSpecializations");
+                });
+
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Employee", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("DateOfJoining")
                         .HasColumnType("datetime2");
@@ -139,11 +151,9 @@ namespace ClinicCare.DataAccess.Migrations
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Patient", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .HasMaxLength(500)
@@ -206,21 +216,19 @@ namespace ClinicCare.DataAccess.Migrations
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Payment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<int>("RecipientId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RecipientId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("SenderId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("SenderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -233,22 +241,20 @@ namespace ClinicCare.DataAccess.Migrations
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Prescription", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("DoctorId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -290,13 +296,21 @@ namespace ClinicCare.DataAccess.Migrations
                     b.Navigation("Prescription");
                 });
 
-            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorDetails", b =>
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorDetail", b =>
                 {
                     b.HasOne("ClinicCare.DataAccess.Models.Employee", "Employee")
                         .WithOne("DoctorDetails")
-                        .HasForeignKey("ClinicCare.DataAccess.Models.DoctorDetails", "DoctorId")
+                        .HasForeignKey("ClinicCare.DataAccess.Models.DoctorDetail", "DoctorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ClinicCare.DataAccess.Models.DoctorSpecialization", "DoctorSpecialization")
+                        .WithMany("DoctorDetails")
+                        .HasForeignKey("SpecializationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DoctorSpecialization");
 
                     b.Navigation("Employee");
                 });
@@ -337,6 +351,11 @@ namespace ClinicCare.DataAccess.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
+                });
+
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorSpecialization", b =>
+                {
+                    b.Navigation("DoctorDetails");
                 });
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Employee", b =>

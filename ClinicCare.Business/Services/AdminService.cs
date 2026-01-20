@@ -1,8 +1,9 @@
-﻿using ClinicCare.Business.Services.Interfaces;
+﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Admin;
-using ClinicCare.Shared.DTOs.Enums;
+using ClinicCare.Shared.Enums;
 using System.Data;
 
 namespace ClinicCare.Business.Services
@@ -31,10 +32,12 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<AdminResponseDto?> GetByIdAsync(int id)
+        public async Task<AdminResponseDto?> GetByIdAsync(Guid id)
         {
             var admin = await _repo.GetByIdAsync(id);
-            if (admin is null || admin.Role != EmployeeRole.Admin) return null;
+
+            if (admin is null || admin.Role != EmployeeRole.Admin)
+                throw new NotFoundException($"Admin with id {id} not found.");
 
             return new AdminResponseDto
             {
@@ -47,10 +50,12 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task UpdateAsync(int id, AdminUpdateDto dto)
+        public async Task UpdateAsync(Guid id, AdminUpdateDto dto)
         {
             var admin = await _repo.GetByIdAsync(id);
-            if (admin is null || admin.Role != EmployeeRole.Admin) return;
+
+            if (admin is null || admin.Role != EmployeeRole.Admin)
+                throw new NotFoundException($"Admin with id {id} not found.");
 
             admin.FirstName = dto.FirstName;
             admin.LastName = dto.LastName;
@@ -59,10 +64,12 @@ namespace ClinicCare.Business.Services
             await _repo.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var admin = await _repo.GetByIdAsync(id);
-            if (admin is null || admin.Role != EmployeeRole.Admin) return;
+
+            if (admin is null || admin.Role != EmployeeRole.Admin)
+                throw new NotFoundException($"Admin with id {id} not found.");
 
             await _repo.Delete(id);
             await _repo.SaveChangesAsync();

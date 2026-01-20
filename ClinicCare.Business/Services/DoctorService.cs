@@ -1,18 +1,19 @@
-﻿using ClinicCare.Business.Services.Interfaces;
+﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Doctor;
-using ClinicCare.Shared.DTOs.Enums;
+using ClinicCare.Shared.Enums;
 using System.Numerics;
 
 namespace ClinicCare.Business.Services
 {
     public class DoctorService : IDoctorService
     {
-        private readonly IGenericRepository<DoctorDetails> _doctorRepo;
+        private readonly IGenericRepository<DoctorDetail> _doctorRepo;
         private readonly IGenericRepository<Employee> _employeeRepo;
 
-        public DoctorService(IGenericRepository<DoctorDetails> doctorRepo, IGenericRepository<Employee> employeeRepo)
+        public DoctorService(IGenericRepository<DoctorDetail> doctorRepo, IGenericRepository<Employee> employeeRepo)
         {
             _doctorRepo = doctorRepo;
             _employeeRepo = employeeRepo;
@@ -38,7 +39,7 @@ namespace ClinicCare.Business.Services
                         Role = employee.Role,
                         DateOfJoining = employee.DateOfJoining,
                         Fee = doctorDetail.Fee,
-                        SpecialistType = doctorDetail.SpecialistType,
+                        SpecializationId = doctorDetail.SpecializationId,
                         DOB = doctorDetail.DOB,
                         Phone = doctorDetail.Phone,
                         FirstPracticeDate = doctorDetail.FirstPracticeDate
@@ -49,12 +50,13 @@ namespace ClinicCare.Business.Services
             return doctorResponses;
         }
 
-        public async Task<DoctorResponseDto?> GetByIdAsync(int id)
+        public async Task<DoctorResponseDto?> GetByIdAsync(Guid id)
         {
             var doctor = await _employeeRepo.GetByIdAsync(id);
             var doctorDetails = await _doctorRepo.GetByIdAsync(id);
 
-            if (doctor is null || doctorDetails is null || doctor.Role != EmployeeRole.Doctor) return null;
+            if (doctor is null || doctorDetails is null || doctor.Role != EmployeeRole.Doctor)
+                throw new NotFoundException($"Doctor with id {id} not found.");
 
             return new DoctorResponseDto
             {
@@ -65,16 +67,16 @@ namespace ClinicCare.Business.Services
                 Role = doctor.Role,
                 DateOfJoining = doctor.DateOfJoining,
                 Fee = doctorDetails.Fee,
-                SpecialistType = doctorDetails.SpecialistType,
+                SpecializationId = doctorDetails.SpecializationId,
                 DOB = doctorDetails.DOB,
                 Phone = doctorDetails.Phone,
                 FirstPracticeDate = doctorDetails.FirstPracticeDate,
             };
         }
 
-        public async Task<IEnumerable<DoctorResponseDto>> GetBySpecialistTypeAsync(string type)
+        public async Task<IEnumerable<DoctorResponseDto>> GetBySpecializationIdAsync(Guid id)
         {
-            var doctorDetailsList = await _doctorRepo.FindAsync(d => d.SpecialistType == type);
+            var doctorDetailsList = await _doctorRepo.FindAsync(d => d.SpecializationId == id);
             var doctorResponses = new List<DoctorResponseDto>();
 
             foreach (var doctorDetail in doctorDetailsList)
@@ -92,7 +94,7 @@ namespace ClinicCare.Business.Services
                         Role = employee.Role,
                         DateOfJoining = employee.DateOfJoining,
                         Fee = doctorDetail.Fee,
-                        SpecialistType = doctorDetail.SpecialistType,
+                        SpecializationId = doctorDetail.SpecializationId,
                         DOB = doctorDetail.DOB,
                         Phone = doctorDetail.Phone,
                         FirstPracticeDate = doctorDetail.FirstPracticeDate
@@ -103,29 +105,31 @@ namespace ClinicCare.Business.Services
             return doctorResponses;
         }
 
-        public async Task UpdateAsync(int id, DoctorUpdateDto dto)
+        public async Task UpdateAsync(Guid id, DoctorUpdateDto dto)
         {
             var doctor = await _employeeRepo.GetByIdAsync(id);
             var doctorDetails = await _doctorRepo.GetByIdAsync(id);
 
-            if (doctor is null || doctorDetails is null || doctor.Role != EmployeeRole.Doctor) return;
+            if (doctor is null || doctorDetails is null || doctor.Role != EmployeeRole.Doctor)
+                throw new NotFoundException($"Doctor with id {id} not found.");
 
             doctor.FirstName = dto.FirstName;
             doctor.LastName = dto.LastName;
             doctor.Password = dto.Password;
 
             doctorDetails.Fee = dto.Fee;
-            doctorDetails.SpecialistType = dto.SpecialistType;
+            doctorDetails.SpecializationId = dto.SpecializationId;
             doctorDetails.Phone = dto.Phone;
 
             await _employeeRepo.SaveChangesAsync();
-            await _doctorRepo.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             var doctor = await _employeeRepo.GetByIdAsync(id);
-            if (doctor is null || doctor.Role != EmployeeRole.Admin) return;
+
+            if (doctor is null || doctor.Role != EmployeeRole.Doctor)
+                throw new NotFoundException($"Doctor with id {id} not found.");
 
             await _employeeRepo.Delete(id);
             await _employeeRepo.SaveChangesAsync();

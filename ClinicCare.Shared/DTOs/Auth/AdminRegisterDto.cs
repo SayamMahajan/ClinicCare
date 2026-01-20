@@ -1,14 +1,21 @@
-﻿using ClinicCare.Shared.DTOs.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ClinicCare.Shared.DTOs.Auth
 {
     public class AdminRegisterDto
     {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public EmployeeRole Role { get { return EmployeeRole.Admin; } }
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [MaxLength(100)]
+        public string Email { get; set; }
 
         [Required]
         [MinLength(8)]
@@ -18,6 +25,8 @@ namespace ClinicCare.Shared.DTOs.Auth
             ErrorMessage = "Password must contain uppercase, lowercase, number and special character."
         )]
         public string Password { get; set; }
+
+        [Required]
         public DateTime DateOfJoining { get; set; }
     }
 }

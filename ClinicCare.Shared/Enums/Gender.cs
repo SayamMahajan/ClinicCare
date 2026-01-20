@@ -1,4 +1,4 @@
-﻿namespace ClinicCare.Shared.DTOs.Enums
+﻿namespace ClinicCare.Shared.Enums
 {
     public enum Gender
     {

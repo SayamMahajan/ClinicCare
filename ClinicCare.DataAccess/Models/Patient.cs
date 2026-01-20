@@ -1,4 +1,4 @@
-﻿using ClinicCare.Shared.DTOs.Enums;
+﻿using ClinicCare.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
@@ -7,7 +7,7 @@ namespace ClinicCare.DataAccess.Models
     public class Patient
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
         [MaxLength(50)]
@@ -18,26 +18,29 @@ namespace ClinicCare.DataAccess.Models
         public string LastName { get; set; } = string.Empty;
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime DOB { get; set; }
 
         [Required]
-        [EnumDataType(typeof(Gender))]
         public Gender Gender { get; set; }
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        [MaxLength(100)]
+        public string Email { get; set; }
 
         [Required]
-        public string Password { get; set; } = string.Empty; 
+        [MinLength(8)]
+        [MaxLength(100)]
+        public string Password { get; set; }
 
         [Required]
         [Phone]
-        public string Phone { get; set; } = string.Empty;
+        [MaxLength(15)]
+        public string Phone { get; set; } 
 
         // Optional fields
         [Phone]
+        [MaxLength(15)]
         public string? EmergencyContact { get; set; }
 
         [MaxLength(5)]
@@ -56,8 +59,8 @@ namespace ClinicCare.DataAccess.Models
         public string? Address { get; set; }
 
         // Navigation properties
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-        public ICollection<Payment> PaymentsSent { get; set; } = new List<Payment>();
-        public ICollection<Prescription> Prescriptions { get; set; } = new List<Prescription>();
+        public ICollection<Appointment> Appointments { get; set; } = [];
+        public ICollection<Payment> PaymentsSent { get; set; } = [];
+        public ICollection<Prescription> Prescriptions { get; set; } = [];
     }
 }

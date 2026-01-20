@@ -1,5 +1,7 @@
-﻿using ClinicCare.Business.Services.Interfaces;
+﻿using ClinicCare.Api.Middlewares;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Shared.DTOs.Doctor;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicCare.Api.Controllers
@@ -16,47 +18,56 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllAsync()
         {
             var doctors = await _doctorService.GetAllAsync();
             return Ok(doctors);
         }
 
-        [HttpGet("{id:int}", Name = "GetDoctorById")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        [HttpGet("{id}", Name = "GetDoctorById")]
+        [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var doctor = await _doctorService.GetByIdAsync(id);
-            if (doctor is null)
-                return NotFound();
-
             return Ok(doctor);
         }
 
-        [HttpGet("specialist")]
-        public async Task<IActionResult> GetBySpecialistTypeAsync([FromQuery] string type)
+        [HttpGet("specialization")]
+        [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetBySpecialistTypeAsync([FromQuery] Guid id)
         {
-            var doctors = await _doctorService.GetBySpecialistTypeAsync(type);
+            var doctors = await _doctorService.GetBySpecializationIdAsync(id);
             return Ok(doctors);
         }
 
-        [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] DoctorUpdateDto dto)
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] DoctorUpdateDto dto)
         {
-            var doctor = await _doctorService.GetByIdAsync(id);
-            if (doctor is null)
-                return NotFound();
-
             await _doctorService.UpdateAsync(id, dto);
             return NoContent();
         }
 
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteAsync(int id)
+        [Authorize(Roles = "Admin")]
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteAsync(Guid id)
         {
-            var doctor = await _doctorService.GetByIdAsync(id);
-            if (doctor is null)
-                return NotFound();
-
             await _doctorService.DeleteAsync(id);
             return NoContent();
         }

@@ -9,10 +9,11 @@ namespace ClinicCare.DataAccess.Data
 
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Employee> Employees { get; set; }
-        public DbSet<DoctorDetails> DoctorDetails { get; set; }
+        public DbSet<DoctorDetail> DoctorDetails { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<DoctorSpecialization> DoctorSpecializations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

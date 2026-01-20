@@ -1,4 +1,4 @@
-﻿using ClinicCare.Shared.DTOs.Enums;
+﻿using ClinicCare.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace ClinicCare.Shared.DTOs.Auth
@@ -6,15 +6,14 @@ namespace ClinicCare.Shared.DTOs.Auth
     public class PatientRegisterDto
     {
         [Required]
-        [MaxLength(30)]
-        public string FirstName { get; set; } = string.Empty;
+        [MaxLength(50)]
+        public string FirstName { get; set; }
 
         [Required]
-        [MaxLength(30)]
-        public string LastName { get; set; } = string.Empty;
+        [MaxLength(50)]
+        public string LastName { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
         public DateTime DOB { get; set; }
 
         [Required]
@@ -24,12 +23,12 @@ namespace ClinicCare.Shared.DTOs.Auth
         [Required]
         [EmailAddress]
         [MaxLength(100)]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; } 
 
         [Required]
         [Phone]
         [MaxLength(15)]
-        public string Phone { get; set; } = string.Empty;
+        public string Phone { get; set; }
 
         [Required]
         [MinLength(8)]
@@ -38,6 +37,6 @@ namespace ClinicCare.Shared.DTOs.Auth
             @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).*$",
             ErrorMessage = "Password must contain uppercase, lowercase, number and special character."
         )]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; } 
     }
 }

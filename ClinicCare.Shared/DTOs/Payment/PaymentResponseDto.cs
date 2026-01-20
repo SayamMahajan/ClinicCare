@@ -2,9 +2,9 @@
 {
     public class PaymentResponseDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public decimal Amount { get; set; }
-        public int RecipientId { get; set; }
-        public int SenderId { get; set; }
+        public Guid RecipientId { get; set; }
+        public Guid SenderId { get; set; }
     }
 }

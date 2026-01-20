@@ -6,18 +6,17 @@ namespace ClinicCare.DataAccess.Models
     public class Prescription
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
-        public int PatientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [Required]
-        public int DoctorId { get; set; }
+        public Guid DoctorId { get; set; }
 
         [Required]
         [MaxLength(1000)]
-
-        public string Description { get; set; } = string.Empty;
+        public string Description { get; set; } 
 
         // Navigation properties
         [ForeignKey(nameof(PatientId))]

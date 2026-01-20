@@ -1,15 +1,22 @@
-﻿using ClinicCare.Shared.DTOs.Enums;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace ClinicCare.Shared.DTOs.Auth
 {
     public class DoctorRegisterDto
     {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public EmployeeRole Role { get { return EmployeeRole.Doctor; } }
+        [Required]
+        [MaxLength(50)]
+        public string FirstName { get; set; }
 
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(50)]
+        public string LastName { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [MaxLength(100)]
+        public string Email { get; set; }
 
         [Required]
         [MinLength(8)]
@@ -18,18 +25,27 @@ namespace ClinicCare.Shared.DTOs.Auth
             @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).*$",
             ErrorMessage = "Password must contain uppercase, lowercase, number and special character."
         )]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; }
 
+        [Required]
         public DateTime DateOfJoining { get; set; }
 
+        [Required]
         public DateTime DOB { get; set; }
 
+        [Required]
+        [Precision(10, 2)]
         public decimal Fee { get; set; }
 
-        public string SpecialistType { get; set; } = string.Empty;
+        [Required]
+        public Guid SpecializationId { get; set; }
 
-        public string Phone { get; set; } = string.Empty;
+        [Required]
+        [Phone]
+        [MaxLength(15)]
+        public string Phone { get; set; } 
 
+        [Required]
         public DateTime FirstPracticeDate { get; set; }
     }
 }

@@ -5,8 +5,8 @@ namespace ClinicCare.Business.Services.Interfaces
     public interface IAdminService
     {
         Task<IEnumerable<AdminResponseDto>> GetAllAsync();
-        Task<AdminResponseDto?> GetByIdAsync(int id);
-        Task UpdateAsync(int id, AdminUpdateDto dto);
-        Task DeleteAsync(int id);
+        Task<AdminResponseDto?> GetByIdAsync(Guid id);
+        Task UpdateAsync(Guid id, AdminUpdateDto dto);
+        Task DeleteAsync(Guid id);
     }
 }

@@ -1,11 +1,26 @@
-﻿namespace ClinicCare.Shared.DTOs.Prescription
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ClinicCare.Shared.DTOs.Prescription
 {
     public class MedicationDto
     {
-        public string Medicine { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public string Medicine { get; set; }
+
+        [Required]
+        [Range(1, 10)]
         public int Dosage { get; set; }
-        public string Frequency { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string Frequency { get; set; }
+
+        [Required]
+        [Range(1, 365)]
         public int Days { get; set; }
-        public string Instructions { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string Instructions { get; set; }
     }
 }

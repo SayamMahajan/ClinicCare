@@ -4,6 +4,7 @@ using ClinicCare.Business.Utils;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Auth;
+using ClinicCare.Shared.Enums;
 
 namespace ClinicCare.Business.Services
 {
@@ -11,12 +12,12 @@ namespace ClinicCare.Business.Services
     {
         private readonly IGenericRepository<Patient> _patientRepo;
         private readonly IGenericRepository<Employee> _employeeRepo;
-        private readonly IGenericRepository<DoctorDetails> _doctorDetailRepo;
+        private readonly IGenericRepository<DoctorDetail> _doctorDetailRepo;
         private readonly IJwtTokenGenerator _jwt;
 
         public AuthService(IGenericRepository<Patient> patientRepo, 
             IGenericRepository<Employee> employeeRepo,
-            IGenericRepository<DoctorDetails> doctorDetailRepo,
+            IGenericRepository<DoctorDetail> doctorDetailRepo,
             IJwtTokenGenerator jwt)
         {
             _patientRepo = patientRepo;
@@ -75,18 +76,19 @@ namespace ClinicCare.Business.Services
             };
         }
 
-        public async Task<int> RegisterPatientAsync(PatientRegisterDto dto)
+        public async Task<Guid> RegisterPatientAsync(PatientRegisterDto dto)
         {
             var exists = await _patientRepo
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new Exception("Email already registered");
+                throw new BadRequestException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
             var patient = new Patient
             {
+                Id = Guid.NewGuid(),
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 DOB = dto.DOB,
@@ -102,21 +104,22 @@ namespace ClinicCare.Business.Services
             return patient.Id;
         }
 
-        public async Task<int> RegisterAdminAsync(AdminRegisterDto dto)
+        public async Task<Guid> RegisterAdminAsync(AdminRegisterDto dto)
         {
             var exists = await _employeeRepo
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new Exception("Email already registered");
+                throw new BadRequestException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
             var admin = new Employee
             {
+                Id = Guid.NewGuid(),
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                Role = dto.Role,
+                Role = EmployeeRole.Admin,
                 Email = dto.Email,
                 DateOfJoining = dto.DateOfJoining,
                 Password = hashedPassword
@@ -128,21 +131,22 @@ namespace ClinicCare.Business.Services
             return admin.Id;
         }
 
-        public async Task<int> RegisterDoctorAsync(DoctorRegisterDto dto)
+        public async Task<Guid> RegisterDoctorAsync(DoctorRegisterDto dto)
         {
             var exists = await _employeeRepo
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new Exception("Email already registered");
+                throw new BadRequestException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
             var doctor = new Employee
             {
+                Id = Guid.NewGuid(),
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
-                Role = dto.Role,
+                Role = EmployeeRole.Doctor,
                 Email = dto.Email,
                 DateOfJoining = dto.DateOfJoining,
                 Password = hashedPassword
@@ -151,10 +155,10 @@ namespace ClinicCare.Business.Services
             await _employeeRepo.InsertAsync(doctor);
             await _employeeRepo.SaveChangesAsync();
 
-            var doctorDetails = new DoctorDetails
+            var doctorDetails = new DoctorDetail
             {
                 DoctorId = doctor.Id,
-                SpecialistType = dto.SpecialistType,
+                SpecializationId = dto.SpecializationId,
                 Fee = dto.Fee,
                 DOB = dto.DOB,
                 Phone = dto.Phone,
