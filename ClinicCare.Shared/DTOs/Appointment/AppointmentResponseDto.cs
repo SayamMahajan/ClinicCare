@@ -2,7 +2,7 @@
 
 namespace ClinicCare.Shared.DTOs.Appointment
 {
-    public class AppointmentResponseDto
+    public class AuthResponseDto
     {
         public Guid Id { get; set; }
         public Guid PatientId { get; set; }

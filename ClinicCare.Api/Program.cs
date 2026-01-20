@@ -1,4 +1,6 @@
+using ClinicCare.Api.Infrastructure.Security;
 using ClinicCare.Api.Middlewares;
+using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Business.Utils;
@@ -21,15 +23,18 @@ namespace ClinicCare.Api
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllers()
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.Converters.Add(
-                        new JsonStringEnumConverter()
-                    );
-                });
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter()
+                );
+            });
 
             builder.Services.AddDbContextPool<AppDbContext>(
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicDBConnection")));
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
@@ -46,7 +51,6 @@ namespace ClinicCare.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(opt =>
             {
-                // JWT Swagger Support
                 opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using Bearer scheme. Example: \"{token}\"",
@@ -87,10 +91,10 @@ namespace ClinicCare.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-                .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build());
+            builder.Services.AddAuthorizationBuilder();
+                //.SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                //    .RequireAuthenticatedUser()
+                //    .Build());
 
             var app = builder.Build();
 

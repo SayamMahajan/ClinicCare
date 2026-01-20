@@ -1,44 +1,45 @@
-﻿using ClinicCare.Business.Services.Interfaces;
-using System.Text.Json;
+﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Interfaces;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Prescription;
+using ClinicCare.Shared.Enums;
+using System.Text.Json;
 
 namespace ClinicCare.Business.Services
 {
     public class PrescriptionService : IPrescriptionService
     {
         private readonly IGenericRepository<Prescription> _repo;
+        private readonly IGenericRepository<Employee> _employeeRepo;
+        private readonly IGenericRepository<Patient> _patientRepo;
+        private readonly ICurrentUser _currentUser;
 
-        public PrescriptionService(IGenericRepository<Prescription> repo)
+        public PrescriptionService(
+            IGenericRepository<Prescription> repo, 
+            ICurrentUser currentUser,
+            IGenericRepository<Employee> employeeRepo,
+            IGenericRepository<Patient> patientRepo
+            )
         {
             _repo = repo;
-        }
-
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync()
-        {
-            var prescriptions = await _repo.GetAllAsync();
-            var dtos = new List<PrescriptionResponseDto>();
-
-            foreach (var prescription in prescriptions)
-            {
-                var descriptionList = JsonSerializer.Deserialize<List<MedicationDto>>(prescription.Description)!;
-                dtos.Add(new PrescriptionResponseDto
-                {
-                    Id = prescription.Id,
-                    PatientId = prescription.PatientId,
-                    DoctorId = prescription.DoctorId,
-                    Description = descriptionList
-                });
-            }
-
-            return dtos;
+            _currentUser = currentUser;
+            _employeeRepo = employeeRepo;
+            _patientRepo = patientRepo;
         }
 
         public async Task<PrescriptionResponseDto?> GetByIdAsync(Guid id)
         {
             var prescription = await _repo.GetByIdAsync(id);
-            if (prescription == null) return null;
+            if (prescription == null)
+                throw new NotFoundException($"Prescription with id {id} not found.");
+
+            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != prescription.PatientId)
+                throw new ForbiddenException("You are not authorized");
+
+            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != prescription.DoctorId)
+                throw new ForbiddenException("You are not authorized");
 
             var descriptionList = JsonSerializer.Deserialize<List<MedicationDto>>(prescription.Description)!;
 
@@ -53,7 +54,20 @@ namespace ClinicCare.Business.Services
 
         public async Task<IEnumerable<PrescriptionResponseDto>> GetByPatientIdAsync(Guid patientId)
         {
-            var prescriptions = await _repo.FindAsync(p => p.PatientId == patientId);
+            var patient = _patientRepo.GetByIdAsync(patientId);
+            if (patient is null)
+                throw new BadRequestException($"Patient with Id{patientId} not available");
+
+            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != patientId)
+                throw new ForbiddenException("You are not authorized");
+
+            IEnumerable<Prescription> prescriptions = [];
+
+            if(_currentUser.Role == UserRole.Patient)
+                prescriptions = await _repo.FindAsync(p => p.PatientId == patientId);
+            else if(_currentUser.Role == UserRole.Doctor)
+                prescriptions = await _repo.FindAsync(p => p.PatientId == patientId && p.DoctorId == _currentUser.UserId);
+
             var dtos = new List<PrescriptionResponseDto>();
 
             foreach (var prescription in prescriptions)
@@ -73,7 +87,15 @@ namespace ClinicCare.Business.Services
 
         public async Task<IEnumerable<PrescriptionResponseDto>> GetByDoctorIdAsync(Guid doctorId)
         {
+            var doctor = _employeeRepo.GetByIdAsync(doctorId);
+            if (doctor is null)
+                throw new BadRequestException($"Doctor with Id{doctorId} not available");
+
+            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != doctorId)
+                throw new ForbiddenException("You are not authorized");
+
             var prescriptions = await _repo.FindAsync(p => p.DoctorId == doctorId);
+
             var dtos = new List<PrescriptionResponseDto>();
 
             foreach (var prescription in prescriptions)
@@ -111,7 +133,8 @@ namespace ClinicCare.Business.Services
         public async Task DeleteAsync(Guid id)
         {
             var prescription = await _repo.GetByIdAsync(id);
-            if (prescription == null) return;
+            if (prescription == null)
+                throw new NotFoundException($"Prescription with id {id} not found.");
 
             await _repo.Delete(id);
             await _repo.SaveChangesAsync();

@@ -82,7 +82,7 @@ namespace ClinicCare.Business.Services
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new BadRequestException("Email already registered");
+                throw new ConflictException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
@@ -110,7 +110,7 @@ namespace ClinicCare.Business.Services
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new BadRequestException("Email already registered");
+                throw new ConflictException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 
@@ -137,7 +137,7 @@ namespace ClinicCare.Business.Services
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
-                throw new BadRequestException("Email already registered");
+                throw new ConflictException("Email already registered");
 
             var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
 

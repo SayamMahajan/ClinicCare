@@ -1,8 +1,10 @@
-﻿using ClinicCare.Business.Services.Interfaces;
+﻿using ClinicCare.Api.Middlewares;
+using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Shared.DTOs.Appointment;
 using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace ClinicCare.Api.Controllers
 {
@@ -11,20 +13,17 @@ namespace ClinicCare.Api.Controllers
     public class AppointmentsController : ControllerBase
     {
         private readonly IAppointmentService _appointmentService;
-        private readonly IDoctorService _doctorService;
-        private readonly IPatientService _patientService;
 
-        public AppointmentsController(IAppointmentService appointmentService,
-            IDoctorService doctorService,
-            IPatientService patientService)
+        public AppointmentsController(IAppointmentService appointmentService)
         {
             _appointmentService = appointmentService;
-            _doctorService = doctorService;
-            _patientService = patientService;
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
+        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllAsync()
         {
             var appointments = await _appointmentService.GetAllAsync();
@@ -32,13 +31,36 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet("{id}", Name = "GetAppointmentById")]
+        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var role = Enum.Parse<UserRole>(User.FindFirstValue(ClaimTypes.Role)!);
+
             var appointment = await _appointmentService.GetByIdAsync(id);
             return Ok(appointment);
         }
 
+        [HttpGet("status")]
+        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetByStatusAsync([FromQuery]AppointmentStatus status)
+        {
+            var appointments = await _appointmentService.GetByStatusAsync(status);
+            return Ok(appointments);
+
+        }
+
         [HttpGet("doctor/{id}")]
+        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByDoctorAsync(Guid id)
         {
             var appointments = await _appointmentService.GetByDoctorAsync(id);
@@ -46,6 +68,11 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet("patient/{id}")]
+        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByPatientAsync(Guid id)
         {
             var appointments = await _appointmentService.GetByPatientAsync(id);
@@ -53,6 +80,9 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateDto dto)
         {
             var id = await _appointmentService.CreateAsync(dto);
@@ -60,6 +90,11 @@ namespace ClinicCare.Api.Controllers
         }
         
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateStatusAsync(Guid id, [FromQuery] AppointmentStatus status)
         {
             await _appointmentService.UpdateStatusAsync(id, status);
@@ -67,6 +102,11 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteAsync(Guid id)
         {
             await _appointmentService.DeleteAsync(id);

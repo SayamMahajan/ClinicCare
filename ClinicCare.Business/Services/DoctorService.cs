@@ -1,4 +1,5 @@
 ﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
@@ -12,11 +13,17 @@ namespace ClinicCare.Business.Services
     {
         private readonly IGenericRepository<DoctorDetail> _doctorRepo;
         private readonly IGenericRepository<Employee> _employeeRepo;
+        private readonly ICurrentUser _currentUser;
 
-        public DoctorService(IGenericRepository<DoctorDetail> doctorRepo, IGenericRepository<Employee> employeeRepo)
+        public DoctorService(
+            IGenericRepository<DoctorDetail> doctorRepo,
+            IGenericRepository<Employee> employeeRepo, 
+            ICurrentUser currentUser
+            )
         {
             _doctorRepo = doctorRepo;
             _employeeRepo = employeeRepo;
+            _currentUser = currentUser;
         }
 
         public async Task<IEnumerable<DoctorResponseDto>> GetAllAsync()
@@ -57,6 +64,9 @@ namespace ClinicCare.Business.Services
 
             if (doctor is null || doctorDetails is null || doctor.Role != EmployeeRole.Doctor)
                 throw new NotFoundException($"Doctor with id {id} not found.");
+
+            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != id)
+                throw new ForbiddenException("You are not authorized");
 
             return new DoctorResponseDto
             {

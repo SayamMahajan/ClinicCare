@@ -1,53 +1,52 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Admin;
+using ClinicCare.Shared.DTOs.Specialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicCare.Api.Controllers
 {
-    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
-    public class AdminsController : ControllerBase
+    public class SpecializationsController : ControllerBase
     {
-        private readonly IAdminService _adminService;
+        private readonly ISpecializationService _specializationService;
 
-        public AdminsController(IAdminService adminService)
+        public SpecializationsController(ISpecializationService specializationService)
         {
-            _adminService = adminService;
+            _specializationService = specializationService;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<SpecializationResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllAsync()
         {
-            var admins = await _adminService.GetAllAsync();
-            return Ok(admins);
+            var payments = await _specializationService.GetAllAsync();
+            return Ok(payments);
         }
 
-        [HttpGet("{id}", Name = "GetAdminById")]
-        [ProducesResponseType(typeof(IEnumerable<AdminResponseDto>), StatusCodes.Status200OK)]
+        [HttpGet("{id}", Name = "GetSpecializationById")]
+        [ProducesResponseType(typeof(IEnumerable<SpecializationResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
-            var admin = await _adminService.GetByIdAsync(id);
-            return Ok(admin);
+            var prescription = await _specializationService.GetByIdAsync(id);
+            return Ok(prescription);
         }
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [HttpPost]
+        [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] AdminUpdateDto dto)
+        public async Task<ActionResult> CreateAsync([FromBody] SpecializationCreateDto dto)
         {
-            await _adminService.UpdateAsync(id, dto);
-            return NoContent();
+            var id = await _specializationService.CreateAsync(dto);
+            return CreatedAtRoute("GetSpecializationById", new { id }, null);
         }
 
         [HttpDelete("{id}")]
@@ -57,8 +56,8 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteAsync(Guid id)
         {
-            await _adminService.DeleteAsync(id);
-            return NoContent();
+            await _specializationService.DeleteAsync(id);
+            return NoContent(); ;
         }
     }
 }
