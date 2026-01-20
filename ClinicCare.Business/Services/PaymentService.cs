@@ -29,7 +29,14 @@ namespace ClinicCare.Business.Services
 
         public async Task<IEnumerable<PaymentResponseDto>> GetAllAsync()
         {
-            var payments = await _repo.GetAllAsync();
+            IEnumerable<Payment> payments = [];
+
+            if (_currentUser.Role == UserRole.Doctor)
+                payments = await _repo.FindAsync(p => p.RecipientId == _currentUser.UserId);
+            else if (_currentUser.Role == UserRole.Patient)
+                payments = await _repo.FindAsync(p => p.SenderId == _currentUser.UserId);
+            else if( _currentUser.Role == UserRole.Admin)
+                payments = await _repo.GetAllAsync();
 
             return payments.Select(p => new PaymentResponseDto
             {
@@ -60,52 +67,7 @@ namespace ClinicCare.Business.Services
                 SenderId = payment.SenderId,
             };
         }
-
-        public async Task<IEnumerable<PaymentResponseDto>> GetByRecipientAsync(Guid recipientId)
-        {
-            var recipient = _employeeRepo.GetByIdAsync(recipientId);
-            if (recipient is null)
-                throw new BadRequestException($"Recipient with Id{recipientId} not available");
-
-            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != recipientId)
-                throw new ForbiddenException("You are not authorized");
-
-            var payments = await _repo.FindAsync(p => p.RecipientId == recipientId);
-
-            return payments.Select(p => new PaymentResponseDto
-            {
-                Id = p.Id,
-                Amount = p.Amount,
-                RecipientId = p.RecipientId,
-                SenderId = p.SenderId,
-            });
-        }
-
-        public async Task<IEnumerable<PaymentResponseDto>> GetBySenderAsync(Guid senderId)
-        {
-            var sender = _patientRepo.GetByIdAsync(senderId);
-            if (sender is null)
-                throw new BadRequestException($"Sender with Id{senderId} not available");
-
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != senderId)
-                throw new ForbiddenException("You are not authorized");
-
-            IEnumerable<Payment> payments= [];
-
-            if (_currentUser.Role == UserRole.Patient)
-                payments = await _repo.FindAsync(p => p.SenderId == senderId);
-            else if (_currentUser.Role == UserRole.Doctor)
-                payments = await _repo.FindAsync(p => p.SenderId == senderId && p.RecipientId == _currentUser.UserId);
-
-            return payments.Select(p => new PaymentResponseDto
-            {
-                Id = p.Id,
-                Amount = p.Amount,
-                RecipientId = p.RecipientId,
-                SenderId = p.SenderId,
-            });
-        }
-
+        
         public async Task<Guid> CreateAsync(PaymentCreateDto dto)
         {
             var payment = new Payment

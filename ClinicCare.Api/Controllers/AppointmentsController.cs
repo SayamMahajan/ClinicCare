@@ -21,17 +21,17 @@ namespace ClinicCare.Api.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<AppointmentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentStatus? status)
         {
-            var appointments = await _appointmentService.GetAllAsync();
+            var appointments = await _appointmentService.GetAllAsync(status);
             return Ok(appointments);
         }
 
         [HttpGet("{id}", Name = "GetAppointmentById")]
-        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<AppointmentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -43,40 +43,6 @@ namespace ClinicCare.Api.Controllers
 
             var appointment = await _appointmentService.GetByIdAsync(id);
             return Ok(appointment);
-        }
-
-        [HttpGet("status")]
-        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByStatusAsync([FromQuery]AppointmentStatus status)
-        {
-            var appointments = await _appointmentService.GetByStatusAsync(status);
-            return Ok(appointments);
-
-        }
-
-        [HttpGet("doctor/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByDoctorAsync(Guid id)
-        {
-            var appointments = await _appointmentService.GetByDoctorAsync(id);
-            return Ok(appointments);
-        }
-
-        [HttpGet("patient/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<AuthResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByPatientAsync(Guid id)
-        {
-            var appointments = await _appointmentService.GetByPatientAsync(id);
-            return Ok(appointments);
         }
 
         [HttpPost]

@@ -26,9 +26,12 @@ namespace ClinicCare.Business.Services
             _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<DoctorResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<DoctorResponseDto>> GetAllAsync(Guid? specializationId = null)
         {
-            var doctorDetailsList = await _doctorRepo.GetAllAsync();
+            var doctorDetailsList = specializationId is null
+                ? await _doctorRepo.GetAllAsync()
+                : await _doctorRepo.FindAsync(d => d.SpecializationId == specializationId);
+
             var doctorResponses = new List<DoctorResponseDto>();
 
             foreach (var doctorDetail in doctorDetailsList)
@@ -82,37 +85,6 @@ namespace ClinicCare.Business.Services
                 Phone = doctorDetails.Phone,
                 FirstPracticeDate = doctorDetails.FirstPracticeDate,
             };
-        }
-
-        public async Task<IEnumerable<DoctorResponseDto>> GetBySpecializationIdAsync(Guid id)
-        {
-            var doctorDetailsList = await _doctorRepo.FindAsync(d => d.SpecializationId == id);
-            var doctorResponses = new List<DoctorResponseDto>();
-
-            foreach (var doctorDetail in doctorDetailsList)
-            {
-                var employee = await _employeeRepo.GetByIdAsync(doctorDetail.DoctorId);
-
-                if (employee is not null && employee.Role == EmployeeRole.Doctor)
-                {
-                    doctorResponses.Add(new DoctorResponseDto
-                    {
-                        Id = employee.Id,
-                        FirstName = employee.FirstName,
-                        LastName = employee.LastName,
-                        Email = employee.Email,
-                        Role = employee.Role,
-                        DateOfJoining = employee.DateOfJoining,
-                        Fee = doctorDetail.Fee,
-                        SpecializationId = doctorDetail.SpecializationId,
-                        DOB = doctorDetail.DOB,
-                        Phone = doctorDetail.Phone,
-                        FirstPracticeDate = doctorDetail.FirstPracticeDate
-                    });
-                }
-            }
-
-            return doctorResponses;
         }
 
         public async Task UpdateAsync(Guid id, DoctorUpdateDto dto)

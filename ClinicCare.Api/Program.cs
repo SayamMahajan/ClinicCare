@@ -91,10 +91,10 @@ namespace ClinicCare.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder();
-                //.SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                //    .RequireAuthenticatedUser()
-                //    .Build());
+            builder.Services.AddAuthorizationBuilder()
+                .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build());
 
             var app = builder.Build();
 

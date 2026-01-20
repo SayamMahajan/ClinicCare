@@ -20,7 +20,18 @@ namespace ClinicCare.Api.Controllers
             _prescriptionService = prescriptionService;
         }
 
-        
+        [HttpGet()]
+        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var prescriptions = await _prescriptionService.GetAllAsync();
+            return Ok(prescriptions);
+        }
+
         [HttpGet("{id}", Name = "GetPrescriptionById")]
         [ProducesResponseType(typeof(IEnumerable<PrescriptionResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -31,30 +42,6 @@ namespace ClinicCare.Api.Controllers
         {
             var prescription = await _prescriptionService.GetByIdAsync(id);
             return Ok(prescription);
-        }
-
-        [HttpGet("patient/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByPatientIdAsync(Guid id)
-        {
-            var prescriptions = await _prescriptionService.GetByPatientIdAsync(id);
-            return Ok(prescriptions);
-        }
-
-        [HttpGet("doctor/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByDoctorIdAsync(Guid id)
-        {
-            var prescriptions = await _prescriptionService.GetByDoctorIdAsync(id);
-            return Ok(prescriptions);
         }
 
         [HttpPost]

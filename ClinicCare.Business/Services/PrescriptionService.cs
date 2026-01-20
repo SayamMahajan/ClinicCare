@@ -28,7 +28,31 @@ namespace ClinicCare.Business.Services
             _employeeRepo = employeeRepo;
             _patientRepo = patientRepo;
         }
+        public async Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync()
+        {
+            IEnumerable<Prescription> prescriptions = [];
 
+            if (_currentUser.Role == UserRole.Doctor)
+                prescriptions = await _repo.FindAsync(p => p.DoctorId == _currentUser.UserId);
+            else if(_currentUser.Role == UserRole.Patient)
+                prescriptions = await _repo.FindAsync(p => p.PatientId == _currentUser.UserId);
+
+            var dtos = new List<PrescriptionResponseDto>();
+
+            foreach (var prescription in prescriptions)
+            {
+                var descriptionList = JsonSerializer.Deserialize<List<MedicationDto>>(prescription.Description)!;
+                dtos.Add(new PrescriptionResponseDto
+                {
+                    Id = prescription.Id,
+                    PatientId = prescription.PatientId,
+                    DoctorId = prescription.DoctorId,
+                    Description = descriptionList
+                });
+            }
+
+            return dtos;
+        }
         public async Task<PrescriptionResponseDto?> GetByIdAsync(Guid id)
         {
             var prescription = await _repo.GetByIdAsync(id);
@@ -50,67 +74,6 @@ namespace ClinicCare.Business.Services
                 DoctorId = prescription.DoctorId,
                 Description = descriptionList,
             };
-        }
-
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetByPatientIdAsync(Guid patientId)
-        {
-            var patient = _patientRepo.GetByIdAsync(patientId);
-            if (patient is null)
-                throw new BadRequestException($"Patient with Id{patientId} not available");
-
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != patientId)
-                throw new ForbiddenException("You are not authorized");
-
-            IEnumerable<Prescription> prescriptions = [];
-
-            if(_currentUser.Role == UserRole.Patient)
-                prescriptions = await _repo.FindAsync(p => p.PatientId == patientId);
-            else if(_currentUser.Role == UserRole.Doctor)
-                prescriptions = await _repo.FindAsync(p => p.PatientId == patientId && p.DoctorId == _currentUser.UserId);
-
-            var dtos = new List<PrescriptionResponseDto>();
-
-            foreach (var prescription in prescriptions)
-            {
-                var descriptionList = JsonSerializer.Deserialize<List<MedicationDto>>(prescription.Description)!;
-                dtos.Add(new PrescriptionResponseDto
-                {
-                    Id = prescription.Id,
-                    PatientId = prescription.PatientId,
-                    DoctorId = prescription.DoctorId,
-                    Description = descriptionList
-                });
-            }
-
-            return dtos;
-        }
-
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetByDoctorIdAsync(Guid doctorId)
-        {
-            var doctor = _employeeRepo.GetByIdAsync(doctorId);
-            if (doctor is null)
-                throw new BadRequestException($"Doctor with Id{doctorId} not available");
-
-            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != doctorId)
-                throw new ForbiddenException("You are not authorized");
-
-            var prescriptions = await _repo.FindAsync(p => p.DoctorId == doctorId);
-
-            var dtos = new List<PrescriptionResponseDto>();
-
-            foreach (var prescription in prescriptions)
-            {
-                var descriptionList = JsonSerializer.Deserialize<List<MedicationDto>>(prescription.Description)!;
-                dtos.Add(new PrescriptionResponseDto
-                {
-                    Id = prescription.Id,
-                    PatientId = prescription.PatientId,
-                    DoctorId = prescription.DoctorId,
-                    Description = descriptionList
-                });
-            }
-
-            return dtos;
         }
 
         public async Task<Guid> CreateAsync(PrescriptionCreateDto dto)

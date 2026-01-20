@@ -28,7 +28,7 @@ namespace ClinicCare.Business.Utils
             {
                 new Claim(ClaimTypes.NameIdentifier, patient.Id.ToString()),
                 new Claim(ClaimTypes.Email, patient.Email),
-                new Claim(ClaimTypes.Role, "patient")
+                new Claim(ClaimTypes.Role, "Patient")
             };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!));

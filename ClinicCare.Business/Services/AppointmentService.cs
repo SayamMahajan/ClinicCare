@@ -28,11 +28,34 @@ namespace ClinicCare.Business.Services
             _patientRepo = patientRepo;
         }
 
-        public async Task<IEnumerable<AuthResponseDto>> GetAllAsync()
+        public async Task<IEnumerable<AppointmentResponseDto>> GetAllAsync(AppointmentStatus? status = null)
         {
-            var appointments = await _repo.GetAllAsync();
+            IEnumerable<Appointment> appointments;
 
-            return appointments.Select(a => new AuthResponseDto
+            if (_currentUser.Role == UserRole.Admin)
+            {
+                appointments = status is null
+                    ? await _repo.GetAllAsync()
+                    : await _repo.FindAsync(a => a.Status == status);
+            }
+            else if (_currentUser.Role == UserRole.Doctor)
+            {
+                appointments = status is null
+                    ? await _repo.FindAsync(a => a.DoctorId == _currentUser.UserId)
+                    : await _repo.FindAsync(a =>
+                        a.DoctorId == _currentUser.UserId &&
+                        a.Status == status);
+            }
+            else
+            {
+                appointments = status is null
+                    ? await _repo.FindAsync(a => a.PatientId == _currentUser.UserId)
+                    : await _repo.FindAsync(a =>
+                        a.PatientId == _currentUser.UserId &&
+                        a.Status == status);
+            }
+
+            return appointments.Select(a => new AppointmentResponseDto
             {
                 Id = a.Id,
                 PatientId = a.PatientId,
@@ -43,7 +66,8 @@ namespace ClinicCare.Business.Services
             });
         }
 
-        public async Task<AuthResponseDto?> GetByIdAsync(Guid id)
+
+        public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
         {
             var appointment = await _repo.GetByIdAsync(id);
             if (appointment is null)
@@ -55,7 +79,7 @@ namespace ClinicCare.Business.Services
             if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != appointment.DoctorId)
                 throw new ForbiddenException($"You are not authorized");
 
-            return new AuthResponseDto
+            return new AppointmentResponseDto
             {
                 Id = appointment.Id,
                 PatientId = appointment.PatientId,
@@ -64,74 +88,6 @@ namespace ClinicCare.Business.Services
                 TimeSlot = appointment.TimeSlot,
                 Status = appointment.Status
             };
-        }
-
-        public async Task<IEnumerable<AuthResponseDto>> GetByStatusAsync(AppointmentStatus status)
-        {
-            IEnumerable<Appointment> appointments;
-
-            if(_currentUser.Role == UserRole.Admin)
-                 appointments = await _repo.FindAsync(a => a.Status == status);
-            if (_currentUser.Role == UserRole.Doctor)
-                appointments = await _repo.FindAsync(a => a.DoctorId == _currentUser.UserId && a.Status == status);
-            else
-                appointments = await _repo.FindAsync(a => a.PatientId == _currentUser.UserId && a.Status == status);
-
-            return appointments.Select(a => new AuthResponseDto
-                {
-                    Id = a.Id,
-                    PatientId = a.PatientId,
-                    DoctorId = a.DoctorId,
-                    Date = a.Date,
-                    TimeSlot = a.TimeSlot,
-                    Status = a.Status
-                });
-        }
-
-        public async Task<IEnumerable<AuthResponseDto>> GetByDoctorAsync(Guid doctorId)
-        {
-            var doctor = _employeeRepo.GetByIdAsync(doctorId);
-            if (doctor is null)
-                throw new BadRequestException($"Doctor with Id{doctorId} not available");
-
-            IEnumerable<Appointment> appointments;
-
-            if (_currentUser.Role == UserRole.Patient)
-                appointments = await _repo.FindAsync(a => a.DoctorId == doctorId && a.PatientId == _currentUser.UserId);
-            else
-                appointments = await _repo.FindAsync(a => a.DoctorId == doctorId);
-
-                return appointments.Select(a => new AuthResponseDto
-                {
-                    Id = a.Id,
-                    PatientId = a.PatientId,
-                    DoctorId = a.DoctorId,
-                    Date = a.Date,
-                    TimeSlot = a.TimeSlot,
-                    Status = a.Status
-                });
-        }
-
-        public async Task<IEnumerable<AuthResponseDto>> GetByPatientAsync(Guid patientId)
-        {
-            var patient = _patientRepo.GetByIdAsync(patientId);
-            if (patient is null)
-                throw new BadRequestException($"Patient with Id{patientId} not available");
-
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != patientId)
-                throw new ForbiddenException("You are not authorized");
-
-            var appointments = await _repo.FindAsync(a => a.PatientId == patientId);
-
-            return appointments.Select(a => new AuthResponseDto
-            {
-                Id = a.Id,
-                PatientId = a.PatientId,
-                DoctorId = a.DoctorId,
-                Date = a.Date,
-                TimeSlot = a.TimeSlot,
-                Status = a.Status
-            });
         }
 
         public async Task<Guid> CreateAsync(AppointmentCreateDto dto)

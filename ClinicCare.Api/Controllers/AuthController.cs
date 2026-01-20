@@ -1,14 +1,11 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Admin;
-using ClinicCare.Shared.DTOs.Appointment;
 using ClinicCare.Shared.DTOs.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicCare.Api.Controllers
 {
-    [AllowAnonymous]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
@@ -20,6 +17,7 @@ namespace ClinicCare.Api.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("patient/login")]
         [ProducesResponseType(typeof(IEnumerable<PatientAuthResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -30,6 +28,7 @@ namespace ClinicCare.Api.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
         [HttpPost("employee/login")]
         [ProducesResponseType(typeof(IEnumerable<EmployeeAuthResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -39,7 +38,8 @@ namespace ClinicCare.Api.Controllers
             var result = await _authService.LoginEmployeeAsync(dto);
             return Ok(result);
         }
-        
+
+        [AllowAnonymous]
         [HttpPost("patient/register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
@@ -54,6 +54,7 @@ namespace ClinicCare.Api.Controllers
             );
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("doctor/register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
@@ -68,6 +69,7 @@ namespace ClinicCare.Api.Controllers
             );
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("admin/register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]

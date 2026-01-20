@@ -19,7 +19,9 @@ public class CurrentUser : ICurrentUser
             user.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         Role = Enum.Parse<UserRole>(
-            user.FindFirstValue(ClaimTypes.Role)!);
+            user.FindFirstValue(ClaimTypes.Role)!,
+            ignoreCase: true
+        );
 
         Email = user.FindFirstValue(ClaimTypes.Email)!;
     }

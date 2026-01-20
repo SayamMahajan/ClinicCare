@@ -21,9 +21,9 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery] Guid? specializationId)
         {
-            var doctors = await _doctorService.GetAllAsync();
+            var doctors = await _doctorService.GetAllAsync(specializationId);
             return Ok(doctors);
         }
 
@@ -37,16 +37,6 @@ namespace ClinicCare.Api.Controllers
         {
             var doctor = await _doctorService.GetByIdAsync(id);
             return Ok(doctor);
-        }
-
-        [HttpGet("specialization")]
-        [ProducesResponseType(typeof(IEnumerable<DoctorResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetBySpecialistTypeAsync([FromQuery] Guid id)
-        {
-            var doctors = await _doctorService.GetBySpecializationIdAsync(id);
-            return Ok(doctors);
         }
 
         [Authorize(Roles = "Admin")]

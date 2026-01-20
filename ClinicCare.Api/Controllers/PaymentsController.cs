@@ -17,7 +17,6 @@ namespace ClinicCare.Api.Controllers
             _paymentService = paymentService;
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -38,30 +37,6 @@ namespace ClinicCare.Api.Controllers
         {
             var payment = await _paymentService.GetByIdAsync(id);
             return Ok(payment);
-        }
-
-        [HttpGet("recipient/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetByRecipientAsync(Guid id)
-        {
-            var payments = await _paymentService.GetByRecipientAsync(id);
-            return Ok(payments);
-        }
-
-        [HttpGet("sender/{id}")]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetBySenderAsync(Guid id)
-        {
-            var payments = await _paymentService.GetBySenderAsync(id);
-            return Ok(payments);
         }
 
         [HttpPost]
