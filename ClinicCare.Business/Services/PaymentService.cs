@@ -3,6 +3,8 @@ using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
+using ClinicCare.Shared.DTOs.Doctor;
+using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Payment;
 using ClinicCare.Shared.Enums;
 using System.Data;
@@ -12,38 +14,45 @@ namespace ClinicCare.Business.Services
     public class PaymentService : IPaymentService
     {
         private readonly IGenericRepository<Payment> _repo;
-        private readonly IGenericRepository<Employee> _employeeRepo;
-        private readonly IGenericRepository<Patient> _patientRepo;
+        private readonly IPaymentRepository _paymentRepo;
         private readonly ICurrentUser _currentUser;
 
-        public PaymentService(IGenericRepository<Payment> repo,
-            IGenericRepository<Employee> employeeRepo,
-            IGenericRepository<Patient> patientRepo,
+        public PaymentService(
+            IGenericRepository<Payment> repo,
+            IPaymentRepository paymenttRepo,
             ICurrentUser currentUser)
         {
             _repo = repo;
+            _paymentRepo = paymenttRepo;
             _currentUser = currentUser;
-            _employeeRepo = employeeRepo;
-            _patientRepo = patientRepo;
         }
 
         public async Task<IEnumerable<PaymentResponseDto>> GetAllAsync()
         {
-            IEnumerable<Payment> payments = [];
-
-            if (_currentUser.Role == UserRole.Doctor)
-                payments = await _repo.FindAsync(p => p.RecipientId == _currentUser.UserId);
-            else if (_currentUser.Role == UserRole.Patient)
-                payments = await _repo.FindAsync(p => p.SenderId == _currentUser.UserId);
-            else if( _currentUser.Role == UserRole.Admin)
-                payments = await _repo.GetAllAsync();
+            IEnumerable<Payment> payments = _currentUser.Role switch
+            {
+                UserRole.Admin => await _repo.GetAllAsync(),
+                UserRole.Doctor => await _paymentRepo.GetPaymentsForDoctorAsync(_currentUser.UserId),
+                UserRole.Patient => await _paymentRepo.GetPaymentsForPatientAsync(_currentUser.UserId),
+                _ => throw new ForbiddenException("Invalid role")
+            };
 
             return payments.Select(p => new PaymentResponseDto
             {
                 Id = p.Id,
                 Amount = p.Amount,
-                RecipientId = p.RecipientId,
-                SenderId = p.SenderId,
+                Patient = new PatientMiniDto
+                {
+                    Id = p.Sender.Id,
+                    FirstName = p.Sender.FirstName,
+                    LastName = p.Sender.LastName
+                },
+                Doctor = new DoctorMiniDto
+                {
+                    Id = p.Recipient.Id,
+                    FirstName = p.Recipient.FirstName,
+                    LastName = p.Recipient.LastName
+                }
             });
         }
            
@@ -63,8 +72,18 @@ namespace ClinicCare.Business.Services
             {
                 Id = payment.Id,
                 Amount = payment.Amount,
-                RecipientId = payment.RecipientId,
-                SenderId = payment.SenderId,
+                Patient = new PatientMiniDto
+                {
+                    Id = payment.Sender.Id,
+                    FirstName = payment.Sender.FirstName,
+                    LastName = payment.Sender.LastName
+                },
+                Doctor = new DoctorMiniDto
+                {
+                    Id = payment.Recipient.Id,
+                    FirstName = payment.Recipient.FirstName,
+                    LastName = payment.Recipient.LastName
+                }
             };
         }
         

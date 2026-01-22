@@ -12,21 +12,15 @@ namespace ClinicCare.Business.Services
     public class PrescriptionService : IPrescriptionService
     {
         private readonly IGenericRepository<Prescription> _repo;
-        private readonly IGenericRepository<Employee> _employeeRepo;
-        private readonly IGenericRepository<Patient> _patientRepo;
         private readonly ICurrentUser _currentUser;
 
         public PrescriptionService(
             IGenericRepository<Prescription> repo, 
-            ICurrentUser currentUser,
-            IGenericRepository<Employee> employeeRepo,
-            IGenericRepository<Patient> patientRepo
+            ICurrentUser currentUser
             )
         {
             _repo = repo;
             _currentUser = currentUser;
-            _employeeRepo = employeeRepo;
-            _patientRepo = patientRepo;
         }
         public async Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync()
         {
@@ -99,7 +93,7 @@ namespace ClinicCare.Business.Services
             if (prescription == null)
                 throw new NotFoundException($"Prescription with id {id} not found.");
 
-            await _repo.Delete(id);
+            await _repo.DeleteAsync(id);
             await _repo.SaveChangesAsync();
         }
     }

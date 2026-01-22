@@ -9,7 +9,7 @@ namespace ClinicCare.DataAccess.Repositories.Interfaces
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
         Task InsertAsync(T entity);
         void Update(T entity);
-        Task Delete(object id);
+        Task DeleteAsync(object id);
         Task SaveChangesAsync();
     }
 }

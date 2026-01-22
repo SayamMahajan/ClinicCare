@@ -1,8 +1,8 @@
 ﻿using ClinicCare.Shared.Enums;
 
-namespace ClinicCare.Shared.DTOs.Auth
+namespace ClinicCare.Shared.DTOs.Employee
 {
-    public class EmployeeAuthResponseDto
+    public class EmployeeLoginResponseDto
     {
         public Guid Id { get; set; }
         public string FirstName { get; set; }

@@ -1,7 +1,7 @@
 ﻿using ClinicCare.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace ClinicCare.Shared.DTOs.Auth
+namespace ClinicCare.Shared.DTOs.Patient
 {
     public class PatientRegisterDto
     {

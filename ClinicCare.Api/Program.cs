@@ -34,19 +34,19 @@ namespace ClinicCare.Api
                 options => options.UseSqlServer(builder.Configuration.GetConnectionString("ClinicDBConnection")));
 
             builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
-            builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<IDoctorService, DoctorService>();
+            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IPatientService, PatientService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddScoped<IPrescriptionService, PrescriptionService>();
-
+            builder.Services.AddScoped<ISpecializationService, SpecializationService>();
             builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+            builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(opt =>
@@ -91,10 +91,10 @@ namespace ClinicCare.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-                .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build());
+            builder.Services.AddAuthorizationBuilder();
+                //.SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                //    .RequireAuthenticatedUser()
+                //    .Build());
 
             var app = builder.Build();
 

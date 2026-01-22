@@ -1,14 +1,16 @@
-﻿using ClinicCare.Shared.Enums;
+﻿using ClinicCare.Shared.DTOs.Doctor;
+using ClinicCare.Shared.DTOs.Patient;
+using ClinicCare.Shared.Enums;
 
 namespace ClinicCare.Shared.DTOs.Appointment
 {
     public class AppointmentResponseDto
     {
         public Guid Id { get; set; }
-        public Guid PatientId { get; set; }
-        public Guid DoctorId { get; set; }
         public AppointmentStatus Status { get; set; }
         public DateTime Date { get; set; }
         public TimeSlotType TimeSlot { get; set; }
+        public PatientMiniDto Patient { get; set; }
+        public DoctorMiniDto Doctor { get; set; }
     }
 }

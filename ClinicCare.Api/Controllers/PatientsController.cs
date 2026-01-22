@@ -65,5 +65,31 @@ namespace ClinicCare.Api.Controllers
             await _patientService.DeleteAsync(id);
             return NoContent(); ;
         }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> PatientRegister(PatientRegisterDto dto)
+        {
+            var patientId = await _patientService.RegisterPatientAsync(dto);
+            return CreatedAtRoute(
+                "GetPatientById",
+                new { id = patientId },
+                null
+            );
+        }
+
+        [AllowAnonymous]
+        [HttpPost("login")]
+        [ProducesResponseType(typeof(IEnumerable<PatientLoginResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> LoginPatientAsync(PatientLoginDto dto)
+        {
+            var result = await _patientService.LoginPatientAsync(dto);
+            return Ok(result);
+        }
     }
 }

@@ -8,5 +8,7 @@ namespace ClinicCare.Business.Services.Interfaces
         Task<PatientResponseDto?> GetByIdAsync(Guid id);
         Task UpdateAsync(Guid id, PatientUpdateDto dto);
         Task DeleteAsync(Guid id);
+        Task<Guid> RegisterPatientAsync(PatientRegisterDto dto);
+        Task<PatientLoginResponseDto> LoginPatientAsync(PatientLoginDto dto);
     }
 }

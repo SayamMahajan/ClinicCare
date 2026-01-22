@@ -1,6 +1,6 @@
-﻿namespace ClinicCare.Shared.DTOs.Auth
+﻿namespace ClinicCare.Shared.DTOs.Patient
 {
-    public class PatientAuthResponseDto
+    public class PatientLoginResponseDto
     {
         public Guid Id { get; set; }
         public string FirstName { get; set; }

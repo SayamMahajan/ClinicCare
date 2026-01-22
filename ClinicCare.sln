@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36705.20 d17.14
+VisualStudioVersion = 17.14.36705.20
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinicCare.Api", "ClinicCare.Api\ClinicCare.Api.csproj", "{87066438-BF16-43F7-A9B0-8BAB515D1AE1}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinicCare.Business", "ClinicCare.Business\ClinicCare.Business.csproj", "{96126D61-80A9-4122-9B07-D2C9C6C355D8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinicCare.Shared", "ClinicCare.Shared\ClinicCare.Shared.csproj", "{C0055474-0EED-42A8-A835-E982919D5E7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClinicCare.UnitTest", "ClinicCare.UnitTest\ClinicCare.UnitTest.csproj", "{83EB8626-3A0E-4140-A179-A254D71D615F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{C0055474-0EED-42A8-A835-E982919D5E7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0055474-0EED-42A8-A835-E982919D5E7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0055474-0EED-42A8-A835-E982919D5E7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83EB8626-3A0E-4140-A179-A254D71D615F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83EB8626-3A0E-4140-A179-A254D71D615F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83EB8626-3A0E-4140-A179-A254D71D615F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83EB8626-3A0E-4140-A179-A254D71D615F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

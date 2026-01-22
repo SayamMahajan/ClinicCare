@@ -61,7 +61,7 @@ namespace ClinicCare.Business.Services
             if (specialization is null)
                 throw new NotFoundException($"Specialization with id {id} not found.");
 
-            await _repo.Delete(id);
+            await _repo.DeleteAsync(id);
             await _repo.SaveChangesAsync();
         }
     }
