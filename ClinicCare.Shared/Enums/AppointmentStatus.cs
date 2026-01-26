@@ -3,7 +3,8 @@
     public enum AppointmentStatus
     {
         Requested = 1,
-        Approved, 
-        Cancelled
+        Approved,
+        Cancelled,
+        Completed
     }
 }

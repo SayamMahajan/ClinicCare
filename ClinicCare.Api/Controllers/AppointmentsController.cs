@@ -47,23 +47,39 @@ namespace ClinicCare.Api.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> CreateAsync([FromBody] AppointmentCreateDto dto)
         {
             var id = await _appointmentService.CreateAsync(dto);
             return CreatedAtRoute("GetAppointmentById", new { id }, null);
         }
-        
+
+        [Authorize(Roles = "Doctor")]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateStatusAsync(Guid id, [FromQuery] AppointmentStatus status)
+        public async Task<IActionResult> UpdatePutAsync(Guid id, [FromBody] AppointmentUpdateDto dto)
         {
-            await _appointmentService.UpdateStatusAsync(id, status);
+            await _appointmentService.UpdateAsync(id, dto);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Doctor")]
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdatePatchAsync(Guid id, [FromBody] AppointmentUpdateDto dto)
+        {
+            await _appointmentService.UpdateAsync(id, dto);
             return NoContent();
         }
 

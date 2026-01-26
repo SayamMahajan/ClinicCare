@@ -11,7 +11,6 @@ namespace ClinicCare.Shared.DTOs.Employee
         public EmployeeRole Role { get; set; }
         public DateTime DateOfJoining { get; set; }
 
-        // Doctor-only
         public Guid? SpecializationId { get; set; }
         public decimal? Fee { get; set; }
         public string? Phone { get; set; }

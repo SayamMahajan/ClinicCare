@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ClinicCare.Shared.DTOs.Patient
+namespace ClinicCare.Shared.DTOs.Employee
 {
-    public class PatientLoginDto
+    public class EmployeeLoginDto
     {
         [Required]
         [EmailAddress]

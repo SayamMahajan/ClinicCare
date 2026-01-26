@@ -17,6 +17,32 @@ namespace ClinicCare.Api.Controllers
             _patientService = patientService;
         }
 
+        [AllowAnonymous]
+        [HttpPost("login")]
+        [ProducesResponseType(typeof(IEnumerable<PatientLoginResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> LoginPatientAsync(PatientLoginDto dto)
+        {
+            var result = await _patientService.LoginPatientAsync(dto);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> PatientRegister(PatientRegisterDto dto)
+        {
+            var patientId = await _patientService.RegisterPatientAsync(dto);
+            return CreatedAtRoute(
+                "GetPatientById",
+                new { id = patientId },
+                null
+            );
+        }
+
         [Authorize(Roles = "Admin, Doctor")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<PatientResponseDto>), StatusCodes.Status200OK)]
@@ -47,7 +73,20 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] PatientUpdateDto dto)
+        public async Task<IActionResult> UpdatePutAsync(Guid id, [FromBody] PatientUpdateDto dto)
+        {
+            await _patientService.UpdateAsync(id, dto);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Patient")]
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdatePatchAsync(Guid id, [FromBody] PatientUpdateDto dto)
         {
             await _patientService.UpdateAsync(id, dto);
             return NoContent();
@@ -64,32 +103,6 @@ namespace ClinicCare.Api.Controllers
         {
             await _patientService.DeleteAsync(id);
             return NoContent(); ;
-        }
-
-        [AllowAnonymous]
-        [HttpPost("register")]
-        [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> PatientRegister(PatientRegisterDto dto)
-        {
-            var patientId = await _patientService.RegisterPatientAsync(dto);
-            return CreatedAtRoute(
-                "GetPatientById",
-                new { id = patientId },
-                null
-            );
-        }
-
-        [AllowAnonymous]
-        [HttpPost("login")]
-        [ProducesResponseType(typeof(IEnumerable<PatientLoginResponseDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> LoginPatientAsync(PatientLoginDto dto)
-        {
-            var result = await _patientService.LoginPatientAsync(dto);
-            return Ok(result);
         }
     }
 }

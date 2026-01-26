@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClinicCare.Api.Controllers
 {
     [Route("api/[controller]")]
-    //[Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class SpecializationsController : ControllerBase
     {
@@ -42,6 +42,7 @@ namespace ClinicCare.Api.Controllers
         [HttpPost]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> CreateAsync([FromBody] SpecializationCreateDto dto)
         {

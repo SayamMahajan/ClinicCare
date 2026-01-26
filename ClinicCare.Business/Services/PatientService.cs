@@ -1,10 +1,11 @@
 ﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Helpers;
 using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Business.Utils;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
-using ClinicCare.Shared.DTOs.Auth;
+using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
 
@@ -28,79 +29,48 @@ namespace ClinicCare.Business.Services
             
         }
 
-        public async Task<IEnumerable<PatientResponseDto>> GetAllAsync()
+        public async Task<PatientLoginResponseDto> LoginPatientAsync(PatientLoginDto dto)
         {
-            var patients = await _repo.GetAllAsync();
+            ValidationHelper.NotNull(dto, "Login data is required.");
 
-            return patients.Select(p => new PatientResponseDto
-            {
-                Id = p.Id,
-                FirstName = p.FirstName,
-                LastName = p.LastName,
-                Email = p.Email,
-                Phone = p.Phone
-            });
-        }
+            dto.Email = NormalizationHelper.NormalizeKey(dto.Email);
 
-        public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
-        {
-            var patient = await _repo.GetByIdAsync(id);
-            if (patient is null)
-                throw new NotFoundException($"Patient with id {id} not found.");
+            var patients = await _repo.FindAsync(p => dto.Email == p.Email);
+            var patient = patients.FirstOrDefault();
 
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
-                throw new ForbiddenException("You are not authorized");
+            if (patient is null || !PasswordHelper.Verify(dto.Password, patient.Password))
+                throw new UnauthorizedException("Invalid email or password.");
 
-            return new PatientResponseDto
+            var token = _jwt.GeneratePatientToken(patient);
+
+            return new PatientLoginResponseDto
             {
                 Id = patient.Id,
                 FirstName = patient.FirstName,
                 LastName = patient.LastName,
                 Email = patient.Email,
-                Phone = patient.Phone
+                Token = token
             };
-        }
-
-        public async Task UpdateAsync(Guid id, PatientUpdateDto dto)
-        {
-            var patient = await _repo.GetByIdAsync(id);
-            if (patient is null)
-                throw new NotFoundException($"Patient with id {id} not found.");
-
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
-                throw new ForbiddenException("You are not authorized");
-
-            patient.FirstName = dto.FirstName;
-            patient.LastName = dto.LastName;
-            patient.Phone = dto.Phone;
-            patient.Address = dto.Address;
-            patient.Password = dto.Password;
-
-            await _repo.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(Guid id)
-        {
-            var patient = await _repo.GetByIdAsync(id);
-            if (patient is null)
-                throw new NotFoundException($"Patient with id {id} not found.");
-
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
-                throw new ForbiddenException("You are not authorized");
-
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
         }
 
         public async Task<Guid> RegisterPatientAsync(PatientRegisterDto dto)
         {
+            ValidationHelper.NotNull(dto, "Patient data is required.");
+
+            dto.Email = NormalizationHelper.NormalizeKey(dto.Email);
+            dto.FirstName = NormalizationHelper.NormalizeKey(dto.FirstName);
+            dto.LastName = NormalizationHelper.NormalizeKey(dto.LastName);
+            dto.Phone = dto.Phone.Trim();
+            dto.Password = dto.Password.Trim();
+
             var exists = await _repo
                 .FindAsync(p => p.Email == dto.Email);
 
             if (exists.Any())
                 throw new ConflictException("Email already registered");
 
-            var hashedPassword = BCrypt.Net.BCrypt.EnhancedHashPassword(dto.Password);
+            PasswordHelper.Validate(dto.Password);
+            var hashedPassword = PasswordHelper.Hash(dto.Password);
 
             var patient = new Patient
             {
@@ -120,24 +90,103 @@ namespace ClinicCare.Business.Services
             return patient.Id;
         }
 
-        public async Task<PatientLoginResponseDto> LoginPatientAsync(PatientLoginDto dto)
+        public async Task<IEnumerable<PatientResponseDto>> GetAllAsync()
         {
-            var patients = await _repo.FindAsync(p => dto.Email.Trim().ToLower() == p.Email);
-            var patient = patients.FirstOrDefault();
+            var patients = await _repo.GetAllAsync();
 
-            if (patient is null ||
-                !BCrypt.Net.BCrypt.EnhancedVerify(dto.Password, patient.Password))
-                throw new UnauthorizedException("Invalid email or password.");
+            return patients.Select(MapToDto);
+        }
 
-            var token = _jwt.GeneratePatientToken(patient);
+        public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
+        {
+            ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            return new PatientLoginResponseDto
+            var patient = await _repo.GetByIdAsync(id);
+            if (patient is null)
+                throw new NotFoundException($"Patient with id {id} not found.");
+
+            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
+                throw new ForbiddenException("You are not authorized");
+
+            return MapToDto(patient);
+        }
+
+        public async Task UpdateAsync(Guid id, PatientUpdateDto dto)
+        {
+            ValidationHelper.GuidNotEmpty(id, nameof(id));
+            ValidationHelper.NotNull(dto, "Patient data is required.");
+
+            var patient = await _repo.GetByIdAsync(id)
+                ?? throw new NotFoundException($"Patient with id {id} not found.");
+
+            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
+                throw new ForbiddenException("You are not authorized.");
+
+            if (dto.FirstName is not null)
+                patient.FirstName =
+                    NormalizationHelper.NormalizeKey(dto.FirstName);
+
+            if (dto.LastName is not null)
+                patient.LastName =
+                    NormalizationHelper.NormalizeKey(dto.LastName);
+
+            if (dto.Phone is not null)
+                patient.Phone = dto.Phone.Trim();
+
+            if (dto.Address is not null)
+                patient.Address = dto.Address.Trim();
+
+            if (dto.Password is not null)
             {
-                Id = patient.Id,
-                FirstName = patient.FirstName,
-                LastName = patient.LastName,
-                Email = patient.Email,
-                Token = token
+                dto.Password = dto.Password.Trim();
+                PasswordHelper.Validate(dto.Password);
+                patient.Password = PasswordHelper.Hash(dto.Password);
+            }
+
+            if (dto.EmergencyContact is not null)
+                patient.EmergencyContact = dto.EmergencyContact.Trim();
+
+            if (dto.BloodGroup is not null)
+                patient.BloodGroup = NormalizationHelper.NormalizeKey(dto.BloodGroup);
+
+            if (dto.Allergies is not null)
+                patient.Allergies = NormalizationHelper.NormalizeKey(dto.Allergies);
+
+            if (dto.BodyWeight is not null)
+                patient.BodyWeight = dto.BodyWeight;
+
+            if (dto.Height is not null)
+                patient.Height = dto.Height;
+
+            if (dto.Address is not null)
+                patient.Address = NormalizationHelper.NormalizeKey(dto.Address);
+
+            await _repo.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            ValidationHelper.GuidNotEmpty(id, nameof(id));
+
+            var patient = await _repo.GetByIdAsync(id);
+            if (patient is null)
+                throw new NotFoundException($"Patient with id {id} not found.");
+
+            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
+                throw new ForbiddenException("You are not authorized");
+
+            await _repo.DeleteAsync(id);
+            await _repo.SaveChangesAsync();
+        }
+        private static PatientResponseDto MapToDto(Patient p)
+        {
+            return new PatientResponseDto
+            {
+                Id = p.Id,
+                FirstName = p.FirstName,
+                LastName = p.LastName,
+                Email = p.Email,
+                Phone = p.Phone
             };
         }
     }

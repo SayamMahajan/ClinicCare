@@ -3,7 +3,7 @@ using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
-using ClinicCare.Shared.DTOs.Doctor;
+using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Payment;
 using ClinicCare.Shared.Enums;

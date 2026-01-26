@@ -8,7 +8,7 @@ namespace ClinicCare.Business.Services.Interfaces
         Task<IEnumerable<AppointmentResponseDto>> GetAllAsync(AppointmentStatus? status);
         Task<AppointmentResponseDto?> GetByIdAsync(Guid id);
         Task<Guid> CreateAsync(AppointmentCreateDto dto);
-        Task UpdateStatusAsync(Guid id, AppointmentStatus status);
+        Task UpdateAsync(Guid id, AppointmentUpdateDto dto);
         Task DeleteAsync(Guid id);
     }
 }

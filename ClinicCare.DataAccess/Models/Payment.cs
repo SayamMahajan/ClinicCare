@@ -17,7 +17,7 @@ namespace ClinicCare.DataAccess.Models
         public Guid RecipientId { get; set; }
 
         [Required]
-        public Guid SenderId { get; set; } // PatientId
+        public Guid SenderId { get; set; }
 
         // Navigation properties
         [ForeignKey(nameof(RecipientId))]

@@ -1,6 +1,5 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Payment;
 using ClinicCare.Shared.DTOs.Prescription;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,24 +45,14 @@ namespace ClinicCare.Api.Controllers
 
         [HttpPost]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> CreateAsync([FromBody] PrescriptionCreateDto dto)
         {
             var id = await _prescriptionService.CreateAsync(dto);
             return CreatedAtRoute("GetPrescriptionById", new { id}, null);
-        }
-
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeleteAsync(Guid id)
-        {
-            await _prescriptionService.DeleteAsync(id);
-            return NoContent(); ;
         }
     }
 }

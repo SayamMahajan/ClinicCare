@@ -7,6 +7,5 @@ namespace ClinicCare.Business.Services.Interfaces
         Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync();
         Task<PrescriptionResponseDto?> GetByIdAsync(Guid id);
         Task<Guid> CreateAsync(PrescriptionCreateDto dto);
-        Task DeleteAsync(Guid id);
     }
 }

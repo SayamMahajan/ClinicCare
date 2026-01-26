@@ -22,7 +22,6 @@ namespace ClinicCare.UnitTest.Controllers
         [TestMethod]
         public async Task GetAllAsync_ValidRequest_ReturnsOkWithSpecializations()
         {
-            // Arrange
             var specializations = new List<SpecializationResponseDto>
             {
                 new() { Id = Guid.NewGuid(), Type = "Cardiologist" },
@@ -31,10 +30,8 @@ namespace ClinicCare.UnitTest.Controllers
 
             _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(specializations);
 
-            // Act
             var result = await _controller.GetAllAsync();
 
-            // Assert
             Assert.IsNotNull(result);
 
             var okResult = result as OkObjectResult;
@@ -49,17 +46,14 @@ namespace ClinicCare.UnitTest.Controllers
         [TestMethod]
         public async Task GetSpecialization_ExistingId_ReturnsOkWithSpecialization()
         {
-            // Arrange
             var specializationId = Guid.NewGuid(); 
             var specializationResponse = new SpecializationResponseDto { Id = specializationId, Type = "Cardiologist" };
 
             _mockService.Setup(s => s.GetByIdAsync(specializationId))
                              .ReturnsAsync(specializationResponse);
 
-            // Act
             var result = await _controller.GetByIdAsync(specializationId);
 
-            // Assert
             var ok = result as OkObjectResult;
             Assert.IsNotNull(ok);
 
@@ -72,15 +66,12 @@ namespace ClinicCare.UnitTest.Controllers
         [TestMethod]
         public async Task CreateAsync_ValidDto_ReturnsCreatedAtRoute()
         {
-            // Arrange
             var dto = new SpecializationCreateDto { Type = "Psychiatrist" };
             var newId = Guid.NewGuid();
             _mockService.Setup(s => s.CreateAsync(dto)).ReturnsAsync(newId);
 
-            // Act
             var result = await _controller.CreateAsync(dto);
 
-            // Assert
             Assert.IsNotNull(result);
 
             var createdResult = result as CreatedAtRouteResult;
@@ -95,14 +86,11 @@ namespace ClinicCare.UnitTest.Controllers
         [TestMethod]
         public async Task DeleteAsync_ExistingId_ReturnsNoContent()
         {
-            // Arrange
             var id = Guid.NewGuid();
             _mockService.Setup(s => s.DeleteAsync(id)).Returns(Task.CompletedTask);
 
-            // Act
             var result = await _controller.DeleteAsync(id);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(NoContentResult));
         }
     }

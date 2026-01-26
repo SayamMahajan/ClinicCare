@@ -1,8 +1,6 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.Shared.DTOs.Auth;
 using ClinicCare.Shared.DTOs.Employee;
-using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +23,7 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(IEnumerable<EmployeeLoginResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> LoginAsync(LoginRequestDto dto)
+        public async Task<IActionResult> LoginAsync(EmployeeLoginDto dto)
         {
             var result = await _service.LoginAsync(dto);
             return Ok(result);
@@ -34,6 +32,7 @@ namespace ClinicCare.Api.Controllers
         [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> RegisterAsync(EmployeeRegisterDto dto)
@@ -81,7 +80,19 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] EmployeeUpdateDto dto)
+        public async Task<IActionResult> UpdatePutAsync(Guid id, [FromBody] EmployeeUpdateDto dto)
+        {
+            await _service.UpdateAsync(id, dto);
+            return NoContent();
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdatePatchAsync(Guid id, [FromBody] EmployeeUpdateDto dto)
         {
             await _service.UpdateAsync(id, dto);
             return NoContent();

@@ -1,4 +1,4 @@
-﻿using ClinicCare.Shared.DTOs.Doctor;
+﻿using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
 
