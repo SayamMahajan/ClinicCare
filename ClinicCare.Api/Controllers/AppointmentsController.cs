@@ -38,9 +38,6 @@ namespace ClinicCare.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var role = Enum.Parse<UserRole>(User.FindFirstValue(ClaimTypes.Role)!);
-
             var appointment = await _appointmentService.GetByIdAsync(id);
             return Ok(appointment);
         }

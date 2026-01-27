@@ -9,5 +9,6 @@ namespace ClinicCare.Shared.DTOs.Payment
         public decimal Amount { get; set; }
         public PatientMiniDto Patient { get; set; }
         public DoctorMiniDto Doctor { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

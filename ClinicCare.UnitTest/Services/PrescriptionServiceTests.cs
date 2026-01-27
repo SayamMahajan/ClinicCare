@@ -13,106 +13,208 @@ namespace ClinicCare.UnitTest.Services
     [TestClass]
     public class PrescriptionServiceTests
     {
-        private readonly Mock<IGenericRepository<Prescription>> _repoMock;
-        private readonly Mock<ICurrentUser> _currentUserMock;
-        private readonly PrescriptionService _service;
+        private Mock<IGenericRepository<Prescription>> _repoMock = null!;
+        private Mock<IGenericRepository<Patient>> _patientRepoMock = null!;
+        private Mock<ICurrentUser> _currentUserMock = null!;
+        private PrescriptionService _service = null!;
 
-        public PrescriptionServiceTests()
+        [TestInitialize]
+        public void Setup()
         {
             _repoMock = new Mock<IGenericRepository<Prescription>>();
+            _patientRepoMock = new Mock<IGenericRepository<Patient>>();
             _currentUserMock = new Mock<ICurrentUser>();
-            _service = new PrescriptionService(_repoMock.Object, _currentUserMock.Object);
+
+            _service = new PrescriptionService(
+                _repoMock.Object,
+                _patientRepoMock.Object,
+                _currentUserMock.Object
+            );
         }
 
-
         [TestMethod]
-        public async Task GetAllAsync_Doctor_ReturnsPrescriptions()
+        public async Task GetAllAsync_Doctor_ReturnsDoctorPrescriptions()
         {
             var doctorId = Guid.NewGuid();
-            _currentUserMock.Setup(c => c.Role).Returns(UserRole.Doctor);
-            _currentUserMock.Setup(c => c.UserId).Returns(doctorId);
 
-            var prescriptions = new List<Prescription>
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Doctor);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(doctorId);
+
+            var data = new List<Prescription>
             {
                 new()
                 {
                     Id = Guid.NewGuid(),
                     DoctorId = doctorId,
+                    PatientId = Guid.NewGuid(),
                     Description = JsonSerializer.Serialize(new List<MedicationDto>())
                 }
             };
 
-            _repoMock.Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Prescription, bool>>>()))
-                     .ReturnsAsync(prescriptions);
+            _repoMock
+                .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Prescription, bool>>>()))
+                .ReturnsAsync(data);
 
-            
             var result = await _service.GetAllAsync();
 
             Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(doctorId, result.First().DoctorId);
         }
 
         [TestMethod]
         [ExpectedException(typeof(ForbiddenException))]
-        public async Task GetByIdAsync_PatientAccessingOthersPrescription_ThrowsForbidden()
+        public async Task GetAllAsync_InvalidRole_ThrowsForbidden()
         {
-            var prescription = new Prescription
-            {
-                Id = Guid.NewGuid(),
-                PatientId = Guid.NewGuid(),
-                Description = JsonSerializer.Serialize(new List<MedicationDto>())
-            };
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Admin);
 
-            _currentUserMock.Setup(c => c.Role).Returns(UserRole.Patient);
-            _currentUserMock.Setup(c => c.UserId).Returns(Guid.NewGuid());
-
-            _repoMock.Setup(r => r.GetByIdAsync(prescription.Id))
-                     .ReturnsAsync(prescription);
-            
-
-            await _service.GetByIdAsync(prescription.Id);
+            await _service.GetAllAsync();
         }
 
         [TestMethod]
-        public async Task CreateAsync_ValidRequest_ShouldInsertSaveAndReturnId()
+        public async Task GetByIdAsync_ValidId_ReturnsDto()
         {
-            var dto = new PrescriptionCreateDto
+            var id = Guid.NewGuid();
+            var patientId = Guid.NewGuid();
+            var doctorId = Guid.NewGuid();
+
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Doctor);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(doctorId);
+
+            var entity = new Prescription
             {
-                DoctorId = Guid.NewGuid(),
-                PatientId = Guid.NewGuid(),
-                Description = new List<MedicationDto>()
+                Id = id,
+                PatientId = patientId,
+                DoctorId = doctorId,
+                Description = JsonSerializer.Serialize(new List<MedicationDto>())
             };
 
-            _repoMock.Setup(r => r.InsertAsync(It.IsAny<Prescription>()))
-                     .Returns(Task.CompletedTask);
+            _repoMock.Setup(r => r.GetByIdAsync(id)).ReturnsAsync(entity);
+
+            var result = await _service.GetByIdAsync(id);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(id, result.Id);
+            Assert.AreEqual(patientId, result.PatientId);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(NotFoundException))]
+        public async Task GetByIdAsync_InvalidId_ThrowsNotFound()
+        {
+            var id = Guid.NewGuid();
+
+            _repoMock.Setup(r => r.GetByIdAsync(id))
+                     .ReturnsAsync((Prescription?)null);
+
+            try
+            {
+                await _service.GetByIdAsync(id);
+            }
+            catch (NotFoundException ex)
+            {
+                Assert.AreEqual($"Prescription with id {id} not found.", ex.Message);
+                throw;
+            }
+        }
+
+        [TestMethod]
+        public async Task CreateAsync_ValidDoctor_CreatesPrescription()
+        {
+            var doctorId = Guid.NewGuid();
+            var patientId = Guid.NewGuid();
+
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Doctor);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(doctorId);
+
+            _patientRepoMock
+                .Setup(r => r.GetByIdAsync(patientId))
+                .ReturnsAsync(new Patient { Id = patientId });
+
+            Prescription? insertedEntity = null;
+
+            _repoMock
+                .Setup(r => r.InsertAsync(It.IsAny<Prescription>()))
+                .Callback<Prescription>(p => insertedEntity = p)
+                .Returns(Task.CompletedTask);
 
             _repoMock.Setup(r => r.SaveChangesAsync())
                      .Returns(Task.CompletedTask);
-            
-            var id = await _service.CreateAsync(dto);
 
-            Assert.AreNotEqual(Guid.Empty, id);
+            var dto = new PrescriptionCreateDto
+            {
+                DoctorId = doctorId,
+                PatientId = patientId,
+                Description = new List<MedicationDto>
+                {
+                    new() { Medicine = "Paracetamol", Dosage = 1, Days = 2, Frequency = "3" }
+                }
+            };
+
+            var result = await _service.CreateAsync(dto);
+
+            Assert.IsNotNull(insertedEntity);
+            Assert.AreEqual(result, insertedEntity!.Id);
+            Assert.AreEqual(doctorId, insertedEntity.DoctorId);
+            Assert.AreEqual(patientId, insertedEntity.PatientId);
+
             _repoMock.Verify(r => r.InsertAsync(It.IsAny<Prescription>()), Times.Once);
             _repoMock.Verify(r => r.SaveChangesAsync(), Times.Once);
         }
 
         [TestMethod]
-        public async Task DeleteAsync_ValidId_ShouldDeleteAndSave()
+        [ExpectedException(typeof(ForbiddenException))]
+        public async Task CreateAsync_NonDoctor_ThrowsForbidden()
         {
-            var prescription = new Prescription { Id = Guid.NewGuid() };
+            // Arrange
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Patient);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(Guid.NewGuid());
 
-            _repoMock.Setup(r => r.GetByIdAsync(prescription.Id))
-                     .ReturnsAsync(prescription);
+            var dto = new PrescriptionCreateDto
+            {
+                PatientId = Guid.NewGuid(),
+                DoctorId = Guid.NewGuid(),
+                Description = new List<MedicationDto>
+                {
+                    new() { Medicine = "Paracetamol", Dosage = 1, Days = 2, Frequency = "3" }
+                }
+            };
 
-            _repoMock.Setup(r => r.DeleteAsync(prescription.Id))
-                     .Returns(Task.CompletedTask);
+            await _service.CreateAsync(dto);
+        }
 
-            _repoMock.Setup(r => r.SaveChangesAsync())
-                     .Returns(Task.CompletedTask);
+        [TestMethod]
+        [ExpectedException(typeof(BadRequestException))]
+        public async Task CreateAsync_InvalidDto_ThrowsBadRequest()
+        {
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Doctor);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(Guid.NewGuid());
 
-            await _service.DeleteAsync(prescription.Id);
+            try
+            {
+                await _service.CreateAsync(new PrescriptionCreateDto());
+            }
+            catch (BadRequestException ex)
+            {
+                Assert.AreEqual("PatientId is invalid.", ex.Message);
+                throw;
+            }
+        }
 
-            _repoMock.Verify(r => r.DeleteAsync(prescription.Id), Times.Once);
-            _repoMock.Verify(r => r.SaveChangesAsync(), Times.Once);
+
+        [TestMethod]
+        [ExpectedException(typeof(ForbiddenException))]
+        public async Task CreateAsync_DoctorCreatingForAnotherDoctor_ThrowsForbidden()
+        {
+            _currentUserMock.SetupGet(c => c.Role).Returns(UserRole.Doctor);
+            _currentUserMock.SetupGet(c => c.UserId).Returns(Guid.NewGuid());
+
+            var dto = new PrescriptionCreateDto
+            {
+                DoctorId = Guid.NewGuid(),
+                PatientId = Guid.NewGuid()
+            };
+
+            await _service.CreateAsync(dto);
         }
     }
 }

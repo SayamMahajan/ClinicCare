@@ -1,4 +1,5 @@
 ﻿using ClinicCare.Business.Exceptions;
+using ClinicCare.Business.Helpers;
 using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
@@ -7,6 +8,7 @@ using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Payment;
 using ClinicCare.Shared.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 
 namespace ClinicCare.Business.Services
@@ -37,7 +39,59 @@ namespace ClinicCare.Business.Services
                 _ => throw new ForbiddenException("Invalid role")
             };
 
-            return payments.Select(p => new PaymentResponseDto
+            return payments.Select(MapToDto);
+        }
+           
+        public async Task<PaymentResponseDto?> GetByIdAsync(Guid id)
+        {
+            ValidationHelper.GuidNotEmpty(id, nameof(id));
+
+            var payment = await _repo.GetByIdAsync(id);
+            if (payment is null)
+                throw new NotFoundException($"Payment with id {id} not found.");
+
+            if(_currentUser.Role == UserRole.Patient && _currentUser.UserId != payment.SenderId)
+                throw new ForbiddenException("You are not authorized");
+
+            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != payment.RecipientId)
+                throw new ForbiddenException("You are not authorized");
+
+            return MapToDto(payment);
+        }
+        
+        public async Task<Guid> CreateAsync(PaymentCreateDto dto)
+        {
+            ValidationHelper.NotNull(dto, "Payment data is required.");
+
+            if (dto.SenderId != _currentUser.UserId)
+                throw new ForbiddenException("Sender does not match logged-in user.");
+
+            if (dto.SenderId == dto.RecipientId)
+                throw new ValidationException("Sender and recipient cannot be the same.");
+
+            if (dto.Amount <= 0)
+                throw new ValidationException("Payment amount must be greater than zero.");
+
+            if (dto.Amount > 10000000)
+                throw new ValidationException("Payment amount exceeds allowed limit.");
+
+            var payment = new Payment
+            {
+                Id = Guid.NewGuid(),
+                Amount = dto.Amount,
+                RecipientId = dto.RecipientId,
+                SenderId = dto.SenderId,
+            };
+
+            await _repo.InsertAsync(payment);
+            await _repo.SaveChangesAsync();
+
+            return payment.Id;
+        }
+
+        private static PaymentResponseDto MapToDto(Payment p)
+        {
+            return new PaymentResponseDto
             {
                 Id = p.Id,
                 Amount = p.Amount,
@@ -52,55 +106,9 @@ namespace ClinicCare.Business.Services
                     Id = p.Recipient.Id,
                     FirstName = p.Recipient.FirstName,
                     LastName = p.Recipient.LastName
-                }
-            });
-        }
-           
-        public async Task<PaymentResponseDto?> GetByIdAsync(Guid id)
-        {
-            var payment = await _repo.GetByIdAsync(id);
-            if (payment is null)
-                throw new NotFoundException($"Payment with id {id} not found.");
-
-            if(_currentUser.Role == UserRole.Patient && _currentUser.UserId != payment.SenderId)
-                throw new ForbiddenException("You are not authorized");
-
-            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != payment.RecipientId)
-                throw new ForbiddenException("You are not authorized");
-
-            return new PaymentResponseDto
-            {
-                Id = payment.Id,
-                Amount = payment.Amount,
-                Patient = new PatientMiniDto
-                {
-                    Id = payment.Sender.Id,
-                    FirstName = payment.Sender.FirstName,
-                    LastName = payment.Sender.LastName
                 },
-                Doctor = new DoctorMiniDto
-                {
-                    Id = payment.Recipient.Id,
-                    FirstName = payment.Recipient.FirstName,
-                    LastName = payment.Recipient.LastName
-                }
+                CreatedAt = p.CreatedAt,
             };
-        }
-        
-        public async Task<Guid> CreateAsync(PaymentCreateDto dto)
-        {
-            var payment = new Payment
-            {
-                Id = Guid.NewGuid(),
-                Amount = dto.Amount,
-                RecipientId = dto.RecipientId,
-                SenderId = dto.SenderId,
-            };
-
-            await _repo.InsertAsync(payment);
-            await _repo.SaveChangesAsync();
-
-            return payment.Id;
         }
     }
 }

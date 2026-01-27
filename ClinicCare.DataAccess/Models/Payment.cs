@@ -19,6 +19,8 @@ namespace ClinicCare.DataAccess.Models
         [Required]
         public Guid SenderId { get; set; }
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         // Navigation properties
         [ForeignKey(nameof(RecipientId))]
         public Employee Recipient { get; set; }

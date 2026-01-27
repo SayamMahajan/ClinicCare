@@ -5,7 +5,6 @@ using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Business.Utils;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
-using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
 

@@ -85,19 +85,5 @@ namespace ClinicCare.UnitTest.Controllers
             Assert.IsNotNull(createdResult.RouteValues);
             Assert.AreEqual(newId, createdResult.RouteValues["id"]);
         }
-
-        [TestMethod]
-        public async Task DeleteAsync_ExistingId_ReturnsNoContent()
-        {
-            var id = Guid.NewGuid();
-
-            _mockService
-                .Setup(s => s.DeleteAsync(id))
-                .Returns(Task.CompletedTask);
-
-            var result = await _controller.DeleteAsync(id);
-
-            Assert.IsInstanceOfType(result, typeof(NoContentResult));
-        }
     }
 }

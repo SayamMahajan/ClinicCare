@@ -10,34 +10,55 @@ namespace ClinicCare.UnitTest.Services
     [TestClass]
     public class SpecializationServiceTests
     {
-        private readonly Mock<IGenericRepository<DoctorSpecialization>> _repoMock;
-        private readonly SpecializationService _service;
+        private Mock<IGenericRepository<DoctorSpecialization>> _repoMock = null!;
+        private SpecializationService _service = null!;
 
-        public SpecializationServiceTests()
+        [TestInitialize]
+        public void Setup()
         {
             _repoMock = new Mock<IGenericRepository<DoctorSpecialization>>();
             _service = new SpecializationService(_repoMock.Object, null!);
         }
 
         [TestMethod]
-        public async Task GetAllAsync_ValidRequest_ReturnsSpecializationResponseDto()
+        public async Task GetAllAsync_ValidRequest_ReturnsMappedDtos()
         {
             var data = new List<DoctorSpecialization>
             {
-                new() { Id = Guid.NewGuid(), Type = "Cardiologist" },
-                new() { Id = Guid.NewGuid(), Type = "ENT" }
+                new() { Id = Guid.NewGuid(), Type = "cardiology" },
+                new() { Id = Guid.NewGuid(), Type = "neurology" }
             };
 
-            _repoMock.Setup(r => r.GetAllAsync())
-                     .ReturnsAsync(data);
+            _repoMock
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(data);
 
             var result = await _service.GetAllAsync();
 
-            Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(result.Any(s => s.Type == "cardiology"));
+            Assert.IsTrue(result.Any(s => s.Type == "neurology"));
+        }
 
-            Assert.AreEqual(data[0].Id, result.ElementAt(0).Id);
-            Assert.AreEqual(data[0].Type, result.ElementAt(0).Type);
+        [TestMethod]
+        public async Task GetByIdAsync_ExistingId_ReturnsDto()
+        {
+            var id = Guid.NewGuid();
+            var entity = new DoctorSpecialization
+            {
+                Id = id,
+                Type = "orthopedics"
+            };
+
+            _repoMock
+                .Setup(r => r.GetByIdAsync(id))
+                .ReturnsAsync(entity);
+
+            var result = await _service.GetByIdAsync(id);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(id, result.Id);
+            Assert.AreEqual("orthopedics", result.Type);
         }
 
         [TestMethod]
@@ -61,49 +82,37 @@ namespace ClinicCare.UnitTest.Services
         }
 
         [TestMethod]
-        public async Task GetByIdAsync_ValidId_ReturnsSpecializationResponseDto()
+        public async Task CreateAsync_ValidData_CreatesSpecialization()
         {
             // Arrange
-            var specialization = new DoctorSpecialization
-            {
-                Id = Guid.NewGuid(),
-                Type = "Neurologist"
-            };
-
-            _repoMock.Setup(r => r.GetByIdAsync(specialization.Id))
-                     .ReturnsAsync(specialization);
-
-            // Act
-            var result = await _service.GetByIdAsync(specialization.Id);
-
-            // Assert
-            Assert.IsNotNull(result);
-            Assert.AreEqual(specialization.Id, result.Id);
-            Assert.AreEqual(specialization.Type, result.Type);
-        }
-
-        [TestMethod]
-        public async Task CreateAsync_ValidRequest_ShouldInsertSaveAndReturnId()
-        {
             var dto = new SpecializationCreateDto
             {
-                Type = "Psychiatrist"
+                Type = "  Cardiology "
             };
 
-            DoctorSpecialization? capturedEntity = null;
+            _repoMock
+                .Setup(r => r.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<DoctorSpecialization, bool>>>()))
+                .ReturnsAsync(Enumerable.Empty<DoctorSpecialization>());
 
-            _repoMock.Setup(r => r.InsertAsync(It.IsAny<DoctorSpecialization>()))
-                     .Callback<DoctorSpecialization>(e => capturedEntity = e)
-                     .Returns(Task.CompletedTask);
+            DoctorSpecialization? insertedEntity = null;
 
-            _repoMock.Setup(r => r.SaveChangesAsync())
-                     .Returns(Task.CompletedTask);
+            _repoMock
+                .Setup(r => r.InsertAsync(It.IsAny<DoctorSpecialization>()))
+                .Callback<DoctorSpecialization>(s => insertedEntity = s)
+                .Returns(Task.CompletedTask);
+
+            _repoMock
+                .Setup(r => r.SaveChangesAsync())
+                .Returns(Task.CompletedTask);
 
             var result = await _service.CreateAsync(dto);
 
-            Assert.IsNotNull(capturedEntity);
-            Assert.AreEqual(dto.Type, capturedEntity.Type);
             Assert.AreNotEqual(Guid.Empty, result);
+            Assert.IsNotNull(insertedEntity);
+
+            Assert.AreEqual("cardiology", insertedEntity!.Type);
+
+            Assert.AreEqual(insertedEntity.Id, result);
 
             _repoMock.Verify(r => r.InsertAsync(It.IsAny<DoctorSpecialization>()), Times.Once);
             _repoMock.Verify(r => r.SaveChangesAsync(), Times.Once);
@@ -132,7 +141,6 @@ namespace ClinicCare.UnitTest.Services
         [TestMethod]
         public async Task DeleteAsync_ValidId_ShouldDeleteAndSave()
         {
-            // Arrange
             var specialization = new DoctorSpecialization
             {
                 Id = Guid.NewGuid(),

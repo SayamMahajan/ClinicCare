@@ -5,7 +5,6 @@ using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Prescription;
-using ClinicCare.Shared.DTOs.Specialization;
 using ClinicCare.Shared.Enums;
 using System.Text.Json;
 

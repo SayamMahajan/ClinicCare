@@ -16,12 +16,6 @@ namespace ClinicCare.Business.Helpers
                 throw new BadRequestException(message);
         }
 
-        public static void MaxLength(string value, int max, string message)
-        {
-            if (value.Length > max)
-                throw new BadRequestException(message);
-        }
-
         public static void MustBeUnique(
             bool exists,
             string message)
@@ -60,12 +54,6 @@ namespace ClinicCare.Business.Helpers
         {
             if (date.Date < DateTime.UtcNow.Date)
                 throw new BadRequestException($"{fieldName} cannot be in the past.");
-        }
-
-        public static void ValidateDateAfter(DateTime later, DateTime earlier, string message)
-        {
-            if (later <= earlier)
-                throw new BadRequestException(message);
         }
     }
 }
