@@ -1,0 +1,58 @@
+<mat-card class="auth-card">
+  <h2>Login</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+      />
+      <mat-error *ngIf="form.controls.email.touched && form.controls.email.invalid">
+        Enter a valid email
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Password</mat-label>
+      <input
+        matInput
+        type="password"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+      <mat-error *ngIf="form.controls.password.touched && form.controls.password.invalid">
+        Password is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Optional: login as selector -->
+    <mat-radio-group
+      formControlName="loginAs"
+      class="role-group"
+    >
+      <mat-radio-button value="PATIENT">Patient</mat-radio-button>
+      <mat-radio-button value="EMPLOYEE">Employee</mat-radio-button>
+    </mat-radio-group>
+
+    <button
+      mat-raised-button
+      color="primary"
+      class="full-width"
+      type="submit"
+      [disabled]="form.invalid || loading"
+    >
+      {{ loading ? 'Logging in...' : 'Login' }}
+    </button>
+
+  </form>
+
+  <div class="auth-footer">
+    <a routerLink="/auth/register/patient">Register as Patient</a>
+    <span>•</span>
+    <a routerLink="/auth/register/employee">Register as Employee</a>
+  </div>
+</mat-card>
