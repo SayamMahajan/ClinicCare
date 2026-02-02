@@ -7,5 +7,6 @@ namespace ClinicCare.Business.Interfaces
         Guid UserId { get; }
         UserRole Role { get; }
         string Email { get; }
+        bool IsAuthenticated { get; }
     }
 }

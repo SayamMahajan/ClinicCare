@@ -1,0 +1,122 @@
+<mat-card-title class="text-center mb-4">
+  {{ userType === 'patient' ? 'Patient Registration' : 'Employee Registration' }}
+</mat-card-title>
+
+<form
+  [formGroup]="userType === 'patient' ? patientForm : employeeForm"
+  (ngSubmit)="submit()"
+>
+
+  <mat-form-field appearance="outline" class="w-100 mb-2">
+    <mat-label>First Name</mat-label>
+    <input matInput formControlName="firstName" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-100 mb-2">
+    <mat-label>Last Name</mat-label>
+    <input matInput formControlName="lastName" />
+  </mat-form-field>
+
+
+  @if (userType === 'patient') {
+
+    <mat-form-field appearance="outline" class="w-100 mb-2">
+      <mat-label>Date of Birth</mat-label>
+      <input matInput [matDatepicker]="dobPicker" formControlName="dob" />
+      <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
+      <mat-datepicker #dobPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100 mb-2">
+      <mat-label>Gender</mat-label>
+      <mat-select formControlName="gender">
+        <mat-option value="Male">Male</mat-option>
+        <mat-option value="Female">Female</mat-option>
+        <mat-option value="Other">Other</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100 mb-3">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone" />
+    </mat-form-field>
+
+  }
+  @else {
+    <mat-form-field appearance="outline" class="w-100 mb-2">
+      <mat-label>Role</mat-label>
+      <mat-select formControlName="role">
+        <mat-option value="Admin">Admin</mat-option>
+        <mat-option value="Doctor">Doctor</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-100 mb-2">
+      <mat-label>Date of Joining</mat-label>
+      <input matInput [matDatepicker]="joinPicker" formControlName="dateOfJoining" />
+      <mat-datepicker-toggle matSuffix [for]="joinPicker"></mat-datepicker-toggle>
+      <mat-datepicker #joinPicker></mat-datepicker>
+    </mat-form-field>
+
+    @if (employeeForm.controls.role.value === 'Doctor') {
+
+      <div formGroupName="doctorDetails" class="border rounded p-3 mb-3">
+
+        <h6 class="mb-3">Doctor Details</h6>
+
+        <mat-form-field appearance="outline" class="w-100 mb-2">
+          <mat-label>Specialization</mat-label>
+          <input matInput formControlName="specializationId" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100 mb-2">
+          <mat-label>Fee</mat-label>
+          <input matInput type="number" formControlName="fee" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100 mb-2">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [matDatepicker]="docDobPicker" formControlName="dob" />
+          <mat-datepicker-toggle matSuffix [for]="docDobPicker"></mat-datepicker-toggle>
+          <mat-datepicker #docDobPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100 mb-2">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>First Practice Date</mat-label>
+          <input matInput [matDatepicker]="practicePicker" formControlName="firstPracticeDate" />
+          <mat-datepicker-toggle matSuffix [for]="practicePicker"></mat-datepicker-toggle>
+          <mat-datepicker #practicePicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    }
+  }
+
+  <mat-form-field appearance="outline" class="w-100 mb-2">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="w-100 mb-4">
+    <mat-label>Password</mat-label>
+    <input matInput type="password" formControlName="password" />
+  </mat-form-field>
+
+  <button
+    mat-raised-button
+    color="primary"
+    class="w-100"
+    [disabled]="
+      userType === 'patient'
+        ? patientForm.invalid
+        : employeeForm.invalid
+    "
+  >
+    Register
+  </button>
+
+</form>

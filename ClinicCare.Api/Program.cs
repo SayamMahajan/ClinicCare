@@ -91,10 +91,18 @@ namespace ClinicCare.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder();
-                //.SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                //    .RequireAuthenticatedUser()
-                //    .Build());
+            builder.Services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build());
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("frontend", p =>
+                    p.WithOrigins("http://localhost:4200")
+                     .AllowAnyHeader()
+                     .AllowAnyMethod());
+            });
 
             var app = builder.Build();
 
@@ -107,6 +115,8 @@ namespace ClinicCare.Api
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseHttpsRedirection();
+
+            app.UseCors("frontend");
 
             app.UseAuthentication();
 

@@ -1,0 +1,8 @@
+<mat-card class="col-12 col-md-6 mx-auto p-4">
+
+  <app-register-form
+    [userType]="userType()"
+    (submitted)="onRegister($event)"
+  />
+
+</mat-card>

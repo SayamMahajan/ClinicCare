@@ -1,0 +1,39 @@
+<mat-nav-list>
+
+  @for (item of menu[role]; track item.label) {
+
+    @if (!item.children) {
+      <a
+        mat-list-item
+        [routerLink]="item.link"
+        routerLinkActive="active"
+      >
+        <span matLine>{{ item.label }}</span>
+      </a>
+    }
+
+    @if (item.children) {
+      <mat-expansion-panel class="border-0 shadow-none">
+
+        <mat-expansion-panel-header>
+          <mat-panel-title class="d-flex align-items-center gap-2">
+            <span>{{ item.label }}</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        @for (child of item.children; track child.label) {
+          <a
+            mat-list-item
+            [routerLink]="child.link"
+            routerLinkActive="active"
+            class="ps-5"
+          >
+            {{ child.label }}
+          </a>
+        }
+
+      </mat-expansion-panel>
+    }
+  }
+
+</mat-nav-list>

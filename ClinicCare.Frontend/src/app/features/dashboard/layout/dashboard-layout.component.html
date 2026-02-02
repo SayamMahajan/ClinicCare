@@ -1,0 +1,17 @@
+<app-toolbar />
+
+<mat-sidenav-container class="vh-100">
+
+  <mat-sidenav
+    mode="side"
+    opened
+    class="border-end"
+  >
+    <app-sidenav class="" [role]="role()" />
+  </mat-sidenav>
+
+  <mat-sidenav-content class="p-3 bg-light">
+    <router-outlet />
+  </mat-sidenav-content>
+
+</mat-sidenav-container>
