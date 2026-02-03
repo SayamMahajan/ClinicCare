@@ -7,7 +7,7 @@ import {
   Gender,
   PatientRegisterForm,
   EmployeeRegisterForm
-} from '../../../../shared/models/auth.models';
+} from '../../../../shared/models/auth.model';
 
 @Component({
   selector: 'app-register-form',
@@ -40,11 +40,11 @@ export class RegisterFormComponent {
     dateOfJoining: [null as any, Validators.required],
     role: ['Admin' as EmployeeRole],
     doctorDetails: this.fb.group({
-      specializationId: ['' , Validators.required],
-      dob: [null as Date | null, Validators.required],
-      firstPracticeDate: [null as Date | null, Validators.required],
-      fee: ['' , Validators.required],
-      phone: ['', Validators.required],
+      specializationId: [''],
+      dob: [null as Date | null],
+      firstPracticeDate: [null as Date | null],
+      fee: [''],
+      phone: [''],
     })
   });
 

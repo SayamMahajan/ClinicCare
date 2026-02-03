@@ -1,0 +1,31 @@
+<div class="container-fluid p-4">
+
+  <app-list-filter-bar
+    searchLabel="Search patient"
+    [options]="['Next Day', 'Next Week', 'Next Month']"
+    label="Time Range"
+    (searchChange)="search.set($event)"
+    (optionChange)="onRangeChange($event)"
+  />
+
+  <app-dropdown-filter
+    [options]="['Morning', 'EarlyNoon', 'LateNoon', 'Evening', 'Night']"
+    label="Time Slot"
+    (valueChange)="onSlotChange($event)"
+  />
+
+  <app-list-container [columns]="columns()">
+
+    @for (apt of filteredAppointments(); track apt.id) {
+      <app-list-row
+        [values]="[
+          getUserName(apt),
+          apt.date,
+          getSlotLabel(apt.timeSlot)
+        ]"
+        (infoClick)="onInfo(apt.id)"
+      />
+    }
+  </app-list-container>
+
+</div>

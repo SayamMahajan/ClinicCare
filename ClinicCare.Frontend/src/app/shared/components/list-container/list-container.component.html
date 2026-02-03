@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-content>
+
+    <div class="row fw-semibold text-muted mb-2">
+      @for (col of columns; track col) {
+        <div [class.col]="col !== 'Action'" [class.col-auto]="col === 'Action'">
+          {{ col }}
+        </div>
+      }
+    </div>
+
+
+    <mat-divider></mat-divider>
+
+    <ng-content></ng-content>
+
+  </mat-card-content>
+</mat-card>

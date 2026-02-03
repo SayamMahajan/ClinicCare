@@ -2,7 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LoginFormComponent } from '../login-form/login-form.component';
 import { MaterialModule } from '../../../../shared/ui/material.module';
-import { AuthUserType, LoginFormValue } from '../../../../shared/models/auth.models';
+import { AuthUser, LoginFormValue } from '../../../../shared/models/auth.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from "../../../../shared/services/auth.service";
@@ -17,7 +17,7 @@ export class LoginPageComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   
-  userType = signal<AuthUserType>('patient');
+  userType = signal<AuthUser>('patient');
 
   private typeParam = toSignal(
     this.route.paramMap,
@@ -47,16 +47,16 @@ export class LoginPageComponent {
         localStorage.setItem('token', res.token);
 
         if (this.userType() === 'patient') {
-          this.router.navigate(['/patient/dashboard']);
+          this.router.navigate(['/dashboard/patient']);
           return;
         }
 
         const role = 'Doctor'// this.authService.getRoleFromToken();
 
         if (role === 'Doctor') {
-          this.router.navigate(['/doctor/dashboard']);
+          this.router.navigate(['/dashboard/doctor']);
         } else if (role === 'Admin') {
-          this.router.navigate(['/admin/dashboard']);
+          this.router.navigate(['/dashboard/admin']);
         } else {
           console.error('Unknown role', role);
           this.router.navigate(['/']);

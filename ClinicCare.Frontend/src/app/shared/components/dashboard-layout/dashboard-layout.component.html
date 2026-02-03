@@ -1,4 +1,7 @@
-<app-toolbar />
+<app-toolbar
+  (logout)="onLogout()"
+  (profile)="onProfile()">
+</app-toolbar>
 
 <mat-sidenav-container class="vh-100">
 
@@ -7,7 +10,7 @@
     opened
     class="border-end"
   >
-    <app-sidenav class="" [role]="role()" />
+    <app-sidenav class="" [role]="'Patient'" />
   </mat-sidenav>
 
   <mat-sidenav-content class="p-3 bg-light">

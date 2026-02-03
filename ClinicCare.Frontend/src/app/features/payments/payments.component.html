@@ -1,0 +1,22 @@
+<div class="container-fluid p-4">
+
+  <app-list-filter-bar
+    searchLabel="Search payments"
+    [options]="['Next Day', 'Next Week', 'Next Month', 'Other']"
+    label="Time Range"
+    (searchChange)="search.set($event)"
+  />
+
+  <app-list-container [columns]="columns">
+
+    @for (payment of filteredPayments(); track payment.id) {
+      <app-list-row
+        [values]="mapRow(payment)"
+        
+      />
+    }
+
+  </app-list-container>
+</div>
+
+(infoClick)="console.log(payment)"

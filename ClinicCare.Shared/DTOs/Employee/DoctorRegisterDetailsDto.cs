@@ -5,24 +5,22 @@ namespace ClinicCare.Shared.DTOs.Employee
 {
     public class DoctorRegisterDetailsDto
     {
-        [Required]
+        //[Required]
         public Guid SpecializationId { get; set; }
 
-        [Required]
+        //[Required]
         [Precision(10, 2)]
         public decimal Fee { get; set; }
 
-        [Required]
+        //[Required]
         public DateTime DOB { get; set; }
 
-        [Required]
+        //[Required]
         [Phone]
         [MaxLength(15)]
         public string Phone { get; set; }
 
-        [Required]
-        [Phone]
-        [MaxLength(15)]
+        //[Required]]
         public DateTime FirstPracticeDate { get; set; }
     }
 }

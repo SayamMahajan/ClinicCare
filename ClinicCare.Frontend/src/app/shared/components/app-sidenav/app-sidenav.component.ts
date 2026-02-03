@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
@@ -18,12 +18,12 @@ export class AppSidenavComponent {
     Admin: [
       {
         label: 'Dashboard',
-        link: '/admin/dashboard'
+        link: '/dashboard/admin'
       },
       {
         label: 'Employees',
         children: [
-          { label: 'Add Employee', link: '/employees/add' },
+          { label: 'Add Employee', link: '/auth/register/employee' },
           { label: 'Manage Employees', link: '/employees' }
         ]
       },
@@ -36,7 +36,7 @@ export class AppSidenavComponent {
     Doctor: [
       {
         label: 'Dashboard',
-        link: '/doctor/dashboard'
+        link: '/dashboard/doctor'
       },
       {
         label: 'Appointments',
@@ -44,7 +44,6 @@ export class AppSidenavComponent {
         children: [
           { label: 'Requests', link: '/appointments/requests' },
           { label: 'Scheduled', link: '/appointments/scheduled' },
-          { label: 'Slot-wise', link: '/appointments/slots' },
           { label: 'History', link: '/appointments/history' }
         ]
       },
@@ -57,13 +56,14 @@ export class AppSidenavComponent {
     Patient: [
       {
         label: 'Dashboard',
-        link: '/patient/dashboard'
+        link: '/dashboard/patient'
       },
       {
         label: 'Appointments',
         children: [
           { label: 'Book Appointment', link: '/appointments/book' },
-          { label: 'Active', link: '/appointments/active' },
+          { label: 'Scheduled', link: '/appointments/scheduled' },
+          { label: 'Requests', link: '/appointments/requests' },
           { label: 'History', link: '/appointments/history' }
         ]
       },

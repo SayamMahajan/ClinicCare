@@ -1,0 +1,19 @@
+<div class="row align-items-center py-3">
+  @for (val of values; track $index) {
+    <div class="col">{{ val }}</div>
+  }
+
+  <div class="col-auto">
+    @if(actionType === 'info') {
+      <button mat-icon-button color="primary" (click)="infoClick.emit()">
+        <mat-icon>info</mat-icon>
+      </button>
+    }
+    @else if(actionType === 'select') {
+      <button  mat-stroked-button color="primary" [disabled]="disabled"(click)="selectClick.emit()">
+        {{ selected ? 'Selected' : 'Select' }}
+      </button>
+    }
+  </div>
+</div>
+

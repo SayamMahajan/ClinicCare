@@ -2,7 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RegisterFormComponent } from '../register-form/register-form.component';
 import { MaterialModule } from '../../../../shared/ui/material.module';
-import { AuthUserType, EmployeeRegisterForm, PatientRegisterForm, RegisterFormValue } from '../../../../shared/models/auth.models';
+import { AuthUser, EmployeeRegisterForm, PatientRegisterForm, RegisterFormValue } from '../../../../shared/models/auth.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from "../../../../shared/services/auth.service";
@@ -18,7 +18,7 @@ export class RegisterPageComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   
-  userType = signal<AuthUserType>('patient');
+  userType = signal<AuthUser>('patient');
 
   private typeParam = toSignal(
     this.route.paramMap,

@@ -1,15 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { Observable, tap } from 'rxjs';
-import { AuthResponse, LoginFormValue } from '../../shared/models/auth.models';
+import { AuthResponse, LoginFormValue } from '../models/auth.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
   private baseUrl = `${environment.apiUrl}/api`;
 
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   loginPatient(data: LoginFormValue): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(
@@ -50,4 +50,51 @@ export class AuthService {
   get token() {
     return localStorage.getItem('token');
   }
+
+  private decodeToken(token: string): any {
+    try {
+      const payload = token.split('.')[1];
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  get userId(): string | null {
+    const token = this.token;
+    if (!token) return null;
+    const decoded = this.decodeToken(token);
+    return decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || 
+          decoded?.['sub'] || 
+          decoded?.['nameid'] || null;
+  }
+
+  get role(): string | null {
+    const token = this.token;
+    if (!token) return null;
+    const decoded = this.decodeToken(token);
+    return decoded?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
+          decoded?.['role'] || null;
+  }
+
+  get email(): string | null {
+    const token = this.token;
+    if (!token) return null;
+    const decoded = this.decodeToken(token);
+    return decoded?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || 
+          decoded?.['email'] || null;
+  }
+
+  get decodedToken(): any {
+    const token = this.token;
+    return token ? this.decodeToken(token) : null;
+  }
+
 }

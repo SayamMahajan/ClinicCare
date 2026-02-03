@@ -1,0 +1,28 @@
+<div class="container-fluid p-4">
+
+  <app-list-filter-bar
+    searchLabel="Search employee"
+    [options]="['Admin', 'Doctor']"
+    label="Role"
+    (searchChange)="onSearchChange($event)"
+    (optionChange)="onRoleChange($event)"
+  />
+
+  <app-list-container
+    [columns]="['First Name', 'Last Name', 'Email', 'Role', 'Date of Joining', 'Action']"
+  >
+    @for (emp of filteredEmployees(); track emp.email) {
+      <app-list-row
+        [values]="[
+          emp.firstName,
+          emp.lastName,
+          emp.email,
+          emp.role,
+          emp.dateOfJoining
+        ]"
+        
+      />
+    }
+  </app-list-container>
+</div>
+<!-- (infoClick)="console.log(emp)" -->

@@ -1,4 +1,4 @@
-export type AuthUserType = 'employee' | 'patient';
+export type AuthUser = 'employee' | 'patient';
 export type EmployeeRole = 'Admin' | 'Doctor';
 export type Gender = 'Male' | 'Female' | 'Other';
 

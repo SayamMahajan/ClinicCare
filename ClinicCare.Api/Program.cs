@@ -47,6 +47,7 @@ namespace ClinicCare.Api
             builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(opt =>
@@ -91,10 +92,10 @@ namespace ClinicCare.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-            .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build());
+            builder.Services.AddAuthorizationBuilder();
+            //.SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+            //    .RequireAuthenticatedUser()
+            //    .Build());
 
             builder.Services.AddCors(options =>
             {

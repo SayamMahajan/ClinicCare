@@ -2,7 +2,7 @@ import { Component, EventEmitter, inject, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MaterialModule } from '../../../../shared/ui/material.module';
-import { LoginFormValue } from '../../../../shared/models/auth.models';
+import { LoginFormValue } from '../../../../shared/models/auth.model';
 
 @Component({
   selector: 'app-login-form',

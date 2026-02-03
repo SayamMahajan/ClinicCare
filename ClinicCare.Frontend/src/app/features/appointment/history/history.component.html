@@ -1,0 +1,47 @@
+<div class="container-fluid p-4">
+
+  <app-list-filter-bar
+    searchLabel="Search"
+    [options]="['Past Day', 'Past Week', 'Past Month']"
+    label="Time Range"
+    (searchChange)="search.set($event)"
+    (optionChange)="onRangeChange($event)"
+  />
+
+  <div class="row mb-4 align-items-center">
+
+    <div class="col-md-3">
+      <app-dropdown-filter
+        [options]="['Morning', 'EarlyNoon', 'LateNoon', 'Evening', 'Night']"
+        label="Time Slot"
+        (valueChange)="onSlotChange($event)"
+      />
+    </div>
+
+    <div class="col-md-9 text-end">
+      <app-dropdown-filter
+        [options]="['All', 'Completed', 'Cancelled']"
+        label="Status"
+        (valueChange)="onStatusChange($event)"
+      />
+    </div>
+
+  </div>
+
+  <app-list-container [columns]="columns()">
+
+    @for (apt of filteredAppointments(); track apt.id) {
+      <app-list-row
+        [values]="[
+          getCounterpartyName(apt),
+          apt.date,
+          getSlotLabel(apt.timeSlot),
+          apt.status
+        ]"
+        (infoClick)="onInfo(apt.id)"
+      />
+    }
+
+  </app-list-container>
+
+</div>

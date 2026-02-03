@@ -1,11 +1,11 @@
 import { Routes } from '@angular/router';
+import { DashboardLayoutComponent } from '../../shared/components/dashboard-layout/dashboard-layout.component';
 
 export const DASHBOARD_ROUTES: Routes = [
   {
     path: 'admin',
-    loadComponent: () =>
-      import('./layout/dashboard-layout.component')
-        .then(c => c.DashboardLayoutComponent),
+    data: { role: 'Admin' },
+    component: DashboardLayoutComponent,
     children: [
       {
         path: '',
@@ -16,10 +16,9 @@ export const DASHBOARD_ROUTES: Routes = [
     ]
   },
   {
-    path: 'doctor/dashboard',
-    loadComponent: () =>
-      import('./layout/dashboard-layout.component')
-        .then(c => c.DashboardLayoutComponent),
+    path: 'doctor',
+    data: { role: 'Doctor' },
+    component: DashboardLayoutComponent,
     children: [
       {
         path: '',
@@ -30,10 +29,9 @@ export const DASHBOARD_ROUTES: Routes = [
     ]
   },
   {
-    path: 'patient/dashboard',
-    loadComponent: () =>
-      import('./layout/dashboard-layout.component')
-        .then(c => c.DashboardLayoutComponent),
+    path: 'patient',
+    data: { role: 'Patient' },
+    component: DashboardLayoutComponent,
     children: [
       {
         path: '',

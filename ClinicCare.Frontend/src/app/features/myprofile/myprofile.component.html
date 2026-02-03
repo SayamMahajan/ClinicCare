@@ -1,0 +1,114 @@
+<h2 class="mb-4">My Profile</h2>
+<mat-card class="mb-4">
+  <mat-card-title>Basic Information</mat-card-title>
+  <mat-card-content>
+
+    <div class="row g-3">
+
+      <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName">
+        </mat-form-field>
+      </div>
+
+      <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName">
+        </mat-form-field>
+      </div>
+
+      <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email">
+        </mat-form-field>
+      </div>
+
+      <div class="col-md-6">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone">
+        </mat-form-field>
+      </div>
+
+    </div>
+
+    @if (role === 'Patient') {
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Emergency Contact</mat-label>
+            <input matInput formControlName="emergencyContact">
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Blood Group</mat-label>
+            <input matInput formControlName="bloodGroup">
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Body Weight (kg)</mat-label>
+            <input matInput type="number" formControlName="bodyWeight">
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Height (cm)</mat-label>
+            <input matInput type="number" formControlName="height">
+          </mat-form-field>
+        </div>
+
+        <div class="col-12">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Allergies</mat-label>
+            <textarea matInput rows="2" formControlName="allergies"></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="col-12">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Address</mat-label>
+            <textarea matInput rows="2" formControlName="address"></textarea>
+          </mat-form-field>
+        </div>
+
+      </div>
+    }
+
+    @if (role === 'Doctor' || role === 'Admin') {
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Consultation Fee (₹)</mat-label>
+            <input matInput type="number" formControlName="fee">
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Specialization</mat-label>
+            <mat-select formControlName="specializationId">
+              <!-- <mat-option *ngFor="let s of specializations" [value]="s.id">
+                {{ s.name }}
+              </mat-option> -->
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+      </div>
+
+    }
+
+
+  </mat-card-content>
+</mat-card>
+

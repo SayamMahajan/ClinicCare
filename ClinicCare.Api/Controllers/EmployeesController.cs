@@ -29,7 +29,8 @@ namespace ClinicCare.Api.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
+        //[Authorize(Roles = "Admin")]
         [HttpPost("register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
@@ -41,7 +42,8 @@ namespace ClinicCare.Api.Controllers
             return CreatedAtRoute("GetEmployeeById", new { id }, null);
         }
 
-        [Authorize(Roles = "Admin")]
+        [AllowAnonymous]
+        //[Authorize(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<EmployeeResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
