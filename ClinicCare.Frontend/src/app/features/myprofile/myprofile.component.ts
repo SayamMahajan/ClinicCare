@@ -1,72 +1,73 @@
-import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '../../shared/ui/material.module';
 import { AuthService } from '../../shared/services/auth.service';
+import { PatientService } from '../../shared/services/patient.service';
+import { PatientUpdate } from '../../shared/models/patient.model';
 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
-  templateUrl: './myprofile.component.html'
+  templateUrl: './myprofile.component.html',
 })
-export class MyProfileComponent {
+export class MyProfileComponent implements OnInit {
+
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
-  private auth = inject(AuthService);
+  private patientService = inject(PatientService);
+  private location = inject(Location);
 
-  role = 'Patient' // 'Patient' | 'Doctor' | 'Admin'
-
-  canEdit = computed(() =>
-    this.role === 'Patient' || this.role === 'Admin'
-  );
+  role = signal(this.authService.role || 'Patient');
 
   form = this.fb.group({
-    // Common
     firstName: [''],
     lastName: [''],
     email: [{ value: '', disabled: true }],
     phone: [''],
+    password: [''],
 
-    // Patient-only
     emergencyContact: [''],
     bloodGroup: [''],
     allergies: [''],
-    bodyWeight: [''],
-    height: [''],
+    height: [],
+    bodyWeight: [],
     address: [''],
-
-    // Doctor/Admin
-    fee: [''],
-    specializationId: [''],
   });
 
-  constructor(
-    
-  ) {}
+  ngOnInit() {
+    if (this.role() === 'Patient') {
+      this.loadPatientProfile();
+    }
+  }
 
-  // ngOnInit() {
-  //   this.loadProfile();
+  loadPatientProfile() {
+    this.patientService.getMyProfile().subscribe(profile => {
+      this.form.patchValue(profile);
+    });
+  }
 
-  //   if (!this.canEdit()) {
-  //     this.form.disable();
-  //   }
-  // }
+  save() {
+    const raw = this.form.getRawValue();
 
-  // loadProfile() {
-  //   this.profileApi.getMyProfile().subscribe(profile => {
-  //     this.form.patchValue(profile);
-  //   });
-  // }
+    const payload: PatientUpdate = {
+      firstName: raw.firstName ?? '',
+      lastName: raw.lastName ?? '',
+      phone: raw.phone ?? '',
+      address: raw.address ?? '',
+      password: raw.password ?? '',
+      emergencyContact: raw.emergencyContact ?? undefined,
+      bloodGroup: raw.bloodGroup ?? undefined,
+      allergies: raw.allergies ?? undefined,
+      bodyWeight: raw.bodyWeight ?? undefined,
+      height: raw.height ?? undefined,
+    };
 
-  // submit() {
-  //   if (!this.form.valid) return;
+    this.patientService.updateMyProfile(payload).subscribe();
+  }
 
-  //   if (this.role === 'Patient') {
-  //     this.profileApi.updatePatient(this.form.value).subscribe();
-  //   }
-
-  //   if (this.role === 'Admin') {
-  //     this.profileApi.updateEmployee(this.form.value).subscribe();
-  //   }
-  // }
+  goBack() {
+    this.location.back();
+  }
 }

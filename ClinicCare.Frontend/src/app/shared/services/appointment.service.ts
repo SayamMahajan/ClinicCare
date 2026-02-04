@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AppointmentResponseDto, AppointmentStatus, TimeSlot } from '../models/appointment.model';
+import { AppointmentResponseDto, AppointmentStatus } from '../models/appointment.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +12,22 @@ export class AppointmentService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/appointments`;
 
-  getAppointments(status?: AppointmentStatus): Observable<AppointmentResponseDto[]> {
+  getAppointments(
+    status?: AppointmentStatus,
+    prescriptionId?: string
+  ): Observable<AppointmentResponseDto[]> {
+
     let params = new HttpParams();
+
     if (status) {
       params = params.set('status', status);
     }
-    return this.http.get<any>(this.baseUrl, { params }).pipe(
-      map((response: any) => Array.isArray(response) ? response : response.data || []),
+
+    if (prescriptionId) {
+      params = params.set('prescriptionId', prescriptionId);
+    }
+
+    return this.http.get<AppointmentResponseDto[]>(this.baseUrl, { params }).pipe(
       catchError(() => of([]))
     );
   }

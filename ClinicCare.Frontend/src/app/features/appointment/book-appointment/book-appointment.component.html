@@ -19,19 +19,19 @@
         [columns]="['Doctor', 'Specialization', 'Experience', 'Fee', 'Phone', 'Action']"
       >
         @for (doc of filteredDoctors(); track doc.id) {
-          <app-list-row
-            [values]="[
-              doc.firstName + ' ' + doc.lastName,
-              doc.specialization,
-              getExperienceYears(doc.firstPracticeDate),
-              doc.fee ? '₹' + doc.fee : '-',
-              doc.phone ?? '-'
-            ]"
-            actionType="select"
-            [selected]="isSelected(doc)"
-            [disabled]="!!selectedDoctor() && !isSelected(doc)"
-            (selectClick)="toggleDoctor(doc)"
-          />
+        <app-list-row
+          [values]="[
+            doc.firstName + ' ' + doc.lastName,
+            doc.specializationId ?? '-',
+            getExperienceYears(doc.dateOfJoining),
+            doc.fee ? '₹' + doc.fee : '-',
+            doc.phone ?? '-'
+          ]"
+          actionType="select"
+          [selected]="isSelected(doc)"
+          [disabled]="!!selectedDoctor() && !isSelected(doc)"
+          (selectClick)="toggleDoctor(doc)"
+        />
         }
       </app-list-container>
 

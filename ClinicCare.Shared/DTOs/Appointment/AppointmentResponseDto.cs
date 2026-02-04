@@ -8,6 +8,7 @@ namespace ClinicCare.Shared.DTOs.Appointment
     {
         public Guid Id { get; set; }
         public AppointmentStatus Status { get; set; }
+        public Guid? PrescriptionId { get; set; }
         public DateTime Date { get; set; }
         public TimeSlotType TimeSlot { get; set; }
         public PatientMiniDto Patient { get; set; }

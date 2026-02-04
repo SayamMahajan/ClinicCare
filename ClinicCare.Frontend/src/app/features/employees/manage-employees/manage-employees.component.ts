@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../../shared/ui/material.module';
 import { ListFilterBarComponent } from '../../../shared/components/list-filter-bar/list-filter-bar.component';
@@ -16,11 +16,10 @@ type RoleFilter = 'All' | Role;
   templateUrl: './manage-employees.component.html',
 })
 
-export class ManageEmployeesComponent {
+export class ManageEmployeesComponent implements OnInit, OnDestroy {
   private employeeService = inject(EmployeeService);
   private destroy$ = new Subject<void>();
 
-  // Simple properties
   employees: Employee[] = [];
   loading = false;
   search = '';

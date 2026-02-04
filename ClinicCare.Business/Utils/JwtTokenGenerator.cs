@@ -1,4 +1,5 @@
 ﻿using ClinicCare.DataAccess.Models;
+using ClinicCare.Shared.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -28,7 +29,7 @@ namespace ClinicCare.Business.Utils
             {
                 new Claim(ClaimTypes.NameIdentifier, patient.Id.ToString()),
                 new Claim(ClaimTypes.Email, patient.Email),
-                new Claim(ClaimTypes.Role, "Patient")
+                new Claim(ClaimTypes.Role, UserRole.Patient.ToString())
             };
 
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key!));

@@ -14,6 +14,24 @@ namespace ClinicCare.DataAccess.Repositories
             _context = context;
         }
 
+        public async Task<IEnumerable<Payment>> GetAllAsync()
+        {
+            return await _context.Payments
+                .AsNoTracking()
+                .Include(p => p.Recipient)
+                .Include(p => p.Sender)
+                .ToListAsync();
+        }
+
+        public async Task<Payment?> GetByIdAsync(Guid id)
+        {
+            return await _context.Payments
+                .AsNoTracking()
+                .Include(p => p.Recipient)
+                .Include(p => p.Sender)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
         public async Task<IEnumerable<Payment>> GetPaymentsForDoctorAsync(Guid doctorId)
         {
             return await _context.Payments

@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Prescription</h2>
+
+<mat-dialog-content>
+
+  <mat-list>
+    <mat-list-item>
+      <strong>Patient:</strong>
+      &nbsp;{{ prescription.patient.firstName }}
+      {{ prescription.patient.lastName }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Doctor:</strong>
+      &nbsp;{{ prescription.doctor.firstName }}
+      {{ prescription.doctor.lastName }}
+    </mat-list-item>
+  </mat-list>
+
+  <mat-divider class="my-3"></mat-divider>
+
+  <mat-accordion>
+
+    @for (med of prescription.description; track $index) {
+      <mat-expansion-panel class="mb-2">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ med.medicine }}
+          </mat-panel-title>
+          <mat-panel-description>
+            Dosage: {{ med.dosage }} , Frequency: {{ med.frequency }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <mat-list>
+          <mat-list-item>
+            <strong>Days:</strong>&nbsp;{{ med.days }}
+          </mat-list-item>
+
+          <mat-list-item>
+            <strong>Instructions:</strong>
+            &nbsp;{{ med.instructions || '—' }}
+          </mat-list-item>
+        </mat-list>
+      </mat-expansion-panel>
+    }
+
+  </mat-accordion>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

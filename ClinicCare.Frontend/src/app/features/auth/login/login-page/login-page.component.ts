@@ -47,16 +47,16 @@ export class LoginPageComponent {
         localStorage.setItem('token', res.token);
 
         if (this.userType() === 'patient') {
-          this.router.navigate(['/dashboard/patient']);
+          this.router.navigate(['/appointments/scheduled']);
           return;
         }
 
-        const role = 'Doctor'// this.authService.getRoleFromToken();
+        const role = signal(this.authService.role);
 
-        if (role === 'Doctor') {
-          this.router.navigate(['/dashboard/doctor']);
-        } else if (role === 'Admin') {
-          this.router.navigate(['/dashboard/admin']);
+        if (role() === 'Doctor') {
+          this.router.navigate(['/appointments/scheduled']);
+        } else if (role() === 'Admin') {
+          this.router.navigate(['/admin/dashboard']);
         } else {
           console.error('Unknown role', role);
           this.router.navigate(['/']);

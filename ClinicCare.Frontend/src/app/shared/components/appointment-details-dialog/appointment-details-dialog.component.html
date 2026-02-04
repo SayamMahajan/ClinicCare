@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>Appointment Details</h2>
+
+<mat-dialog-content>
+
+  <mat-list>
+
+    <mat-list-item>
+      <strong>Doctor:</strong>&nbsp;
+      {{ data.appointment.doctor.firstName }}
+      {{ data.appointment.doctor.lastName }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Patient:</strong>&nbsp;
+      {{ data.appointment.patient.firstName }}
+      {{ data.appointment.patient.lastName }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Date:</strong>&nbsp;
+      {{ data.appointment.date | date }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Time Slot:</strong>&nbsp;
+      {{ slotLabel(data.appointment.timeSlot) }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Status:</strong>&nbsp;
+      {{ data.appointment.status }}
+    </mat-list-item>
+
+  </mat-list>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+
+  @for (btn of data.actions; track btn.type) {
+    <button
+      mat-raised-button
+      [color]="btn.color || 'primary'"
+      (click)="action(btn.type)"
+    >
+      {{ btn.label }}
+    </button>
+  }
+
+  <button mat-button (click)="close()">Close</button>
+
+</mat-dialog-actions>

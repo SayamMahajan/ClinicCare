@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppointmentResponseDto, TimeSlot, FutureTimeRange, UserRole } from '../../../shared/models/appointment.model';
 import { TIME_SLOT_LABEL } from '../../../shared/utils/time-slot.mapper';
@@ -7,6 +7,12 @@ import { ListFilterBarComponent } from '../../../shared/components/list-filter-b
 import { ListRowComponent } from '../../../shared/components/list-row/list-row.component';
 import { MaterialModule } from '../../../shared/ui/material.module';
 import { DropdownFilterComponent } from "../../../shared/components/dropdown-filter/dropdown-filter.component";
+import { Subject, takeUntil } from 'rxjs';
+import { AppointmentService } from '../../../shared/services/appointment.service';
+import { AuthService } from '../../../shared/services/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { AppointmentDetailsDialogComponent } from '../../../shared/components/appointment-details-dialog/appointment-details-dialog.component';
+import { resolveAppointmentActions } from '../../../shared/utils/appointment-action';
 
 @Component({
   selector: 'app-requests',
@@ -20,36 +26,48 @@ import { DropdownFilterComponent } from "../../../shared/components/dropdown-fil
 ],
   templateUrl: './requests.component.html'
 })
-export class RequestsComponent {
-  role = signal<UserRole>('Doctor'); 
+export class RequestsComponent implements OnInit, OnDestroy {
+
+  private appointmentService = inject(AppointmentService);
+  private authService = inject(AuthService);
+  private dialog = inject(MatDialog);
+  private destroy$ = new Subject<void>();
+
+  role = signal<UserRole>(this.authService.role as UserRole || 'Patient');
 
   search = signal('');
   selectedRange = signal<FutureTimeRange>('All');
   selectedSlot = signal<'All' | TimeSlot>('All');
 
-  private _appointments = signal<AppointmentResponseDto[]>([
-    {
-      id: '1',
-      status: 'Requested',
-      date: '2026-02-10',
-      timeSlot: 'Morning',
-      patient: { id: 'p1', firstName: 'Rahul', lastName: 'Sharma' },
-      doctor: { id: 'd1', firstName: 'Amit', lastName: 'Singh' }
-    },
-    {
-      id: '2',
-      status: 'Requested',
-      date: '2026-02-11',
-      timeSlot: 'Evening',
-      patient: { id: 'p2', firstName: 'Anita', lastName: 'Verma' },
-      doctor: { id: 'd1', firstName: 'Amit', lastName: 'Singh' }
-    }
-  ]);
-  public get appointments() {
-    return this._appointments;
+  appointments = signal<AppointmentResponseDto[]>([]);
+  loading = signal(false);
+
+  ngOnInit() {
+    this.loadAppointments();
   }
-  public set appointments(value) {
-    this._appointments = value;
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadAppointments() {
+    this.loading.set(true);
+
+    this.appointmentService
+      .getAppointments('Requested')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: AppointmentResponseDto[]) => {
+          this.appointments.set(data);
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to load requests', err);
+          this.appointments.set([]);
+          this.loading.set(false);
+        }
+      });
   }
 
   columns = computed(() => [
@@ -62,8 +80,6 @@ export class RequestsComponent {
     const today = new Date();
 
     return this.appointments().filter(a => {
-
-      if (a.status !== 'Requested') return false;
 
       const appointmentDate = new Date(a.date);
       if (appointmentDate < today) return false;
@@ -102,7 +118,7 @@ export class RequestsComponent {
     });
   });
 
-  getCounterpartyName(a: AppointmentResponseDto): string {
+  getUserName(a: AppointmentResponseDto): string {
     return this.role() === 'Doctor'
       ? `${a.patient.firstName} ${a.patient.lastName}`
       : `${a.doctor.firstName} ${a.doctor.lastName}`;
@@ -121,6 +137,44 @@ export class RequestsComponent {
   }
 
   onInfo(id: string) {
-    console.log('Requested appointment:', id);
+    const appointment = this.appointments().find(a => a.id === id);
+    if (!appointment) return;
+
+    const actions = resolveAppointmentActions(appointment, 'scheduled');
+
+    this.dialog
+    .open(AppointmentDetailsDialogComponent, {
+      width: '450px',
+      data: {
+        appointment,
+        actions
+      }
+    })
+    .afterClosed()
+    .subscribe(action => {
+      switch (action) {
+        case 'delete':
+          this.deleteAppointment(id);
+          break;
+        case 'addPrescription':
+          this.addPrescription(id);
+          break;
+        case 'viewPrescription':
+          this.viewPrescription(id);
+          break;
+      }
+    });
+  }
+  
+  deleteAppointment(id: string) {
+    this.appointmentService.delete(id).subscribe(() => {
+    this.loadAppointments();
+    });
+  }
+
+  addPrescription(id: string) {
+  }
+
+  viewPrescription(id: string) {
   }
 }

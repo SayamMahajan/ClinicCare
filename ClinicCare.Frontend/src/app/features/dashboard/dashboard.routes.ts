@@ -3,7 +3,7 @@ import { DashboardLayoutComponent } from '../../shared/components/dashboard-layo
 
 export const DASHBOARD_ROUTES: Routes = [
   {
-    path: 'admin',
+    path: 'dashboard',
     data: { role: 'Admin' },
     component: DashboardLayoutComponent,
     children: [
@@ -15,30 +15,4 @@ export const DASHBOARD_ROUTES: Routes = [
       }
     ]
   },
-  {
-    path: 'doctor',
-    data: { role: 'Doctor' },
-    component: DashboardLayoutComponent,
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./doctor-dashboard/doctor-dashboard.component')
-            .then(c => c.DoctorDashboardComponent)
-      }
-    ]
-  },
-  {
-    path: 'patient',
-    data: { role: 'Patient' },
-    component: DashboardLayoutComponent,
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./patient-dashboard/patient-dashboard.component')
-            .then(c => c.PatientDashboardComponent)
-      }
-    ]
-  }
 ];

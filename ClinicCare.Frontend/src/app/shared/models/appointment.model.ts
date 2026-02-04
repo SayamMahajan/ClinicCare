@@ -1,12 +1,12 @@
 export type TimeSlot = 
   |'Morning' 
-  | 'EarlyNoon' 
-  | 'LateNoon' 
+  | 'Earlynoon' 
+  | 'Latenoon' 
   | 'Evening' 
   | 'Night';
 
 export type AppointmentStatus = 
-  |'Requested'
+  | 'Requested'
   | 'Approved'
   | 'Cancelled'
   | 'Completed';
@@ -23,7 +23,7 @@ export type FutureTimeRange =
   | 'Next Week'
   | 'Next Month'
 
-export type UserRole = 'Doctor' | 'Patient';
+export type UserRole = 'Doctor' | 'Patient' | 'Admin';
 
 export interface PatientMiniDto {
   id: string;
@@ -47,19 +47,9 @@ export interface AppointmentCreateDto {
 export interface AppointmentResponseDto {
   id: string;
   status: AppointmentStatus;
+  prescriptionId?: string;
   date: string;
   timeSlot: TimeSlot;
   patient: PatientMiniDto;
   doctor: DoctorMiniDto;
-}
-export interface DoctorDto {
-  id: string;
-  firstName: string;
-  lastName: string;
-  specialization: string;
-
-  specializationId?: string;
-  fee?: number;
-  phone?: string;
-  firstPracticeDate?: string;
 }

@@ -1,5 +1,6 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
+using ClinicCare.DataAccess.Models;
 using ClinicCare.Shared.DTOs.Appointment;
 using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -19,14 +20,13 @@ namespace ClinicCare.Api.Controllers
             _appointmentService = appointmentService;
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<AppointmentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentStatus? status)
+        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentStatus? status, [FromQuery] Guid? prescriptionId)
         {
-            var appointments = await _appointmentService.GetAllAsync(status);
+            var appointments = await _appointmentService.GetAllAsync(status, prescriptionId);
             return Ok(appointments);
         }
 

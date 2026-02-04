@@ -22,7 +22,7 @@ namespace ClinicCare.DataAccess.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
-
+            
         public async Task<IEnumerable<Employee>> GetDoctorsAsync(Guid? specializationId)
         {
             var query = _context.Employees

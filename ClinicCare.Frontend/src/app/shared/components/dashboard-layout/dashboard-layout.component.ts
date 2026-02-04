@@ -1,4 +1,4 @@
-import { Component, computed, inject, Input } from '@angular/core';
+import { Component, computed, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
@@ -12,19 +12,15 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './dashboard-layout.component.html'
 })
 export class DashboardLayoutComponent {
-  private auth = inject(AuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
-
-  // role = computed(() => this.employeeStore.role() ?? 'Patient');
   
-  @Input() role: 'Admin' | 'Doctor' | 'Patient' = 'Admin';
-
   onLogout() {
-    this.auth.logout();
+    this.authService.logout();
     this.router.navigate(['/auth']);
   }
 
   onProfile() {
-    this.router.navigate(['/profile']);
+    this.router.navigate(['/my-profile']);
   }
 }

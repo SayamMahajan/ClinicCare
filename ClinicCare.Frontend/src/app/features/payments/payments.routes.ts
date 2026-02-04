@@ -4,7 +4,6 @@ import { DashboardLayoutComponent } from '../../shared/components/dashboard-layo
 export const PAYMENTS_ROUTES: Routes = [
   {
     path: '',
-    data: { role: 'Admin' },
     component: DashboardLayoutComponent,
     children: [
       {

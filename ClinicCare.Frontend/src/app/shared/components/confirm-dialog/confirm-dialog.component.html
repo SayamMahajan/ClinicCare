@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>
+  {{ data.title }}
+</h2>
+
+<mat-dialog-content>
+
+  @if (data.message) {
+    <p class="mb-3">
+      {{ data.message }}
+    </p>
+  }
+
+  @if (data.details?.length) {
+    <mat-list>
+      @for (item of data.details; track item.label) {
+        <mat-list-item>
+          <strong>{{ item.label }}</strong>&nbsp;– {{ item.value }}
+        </mat-list-item>
+      }
+    </mat-list>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+
+  <button mat-button (click)="cancel()">
+    {{ data.cancelText || 'Cancel' }}
+  </button>
+
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="confirm()"
+  >
+    {{ data.confirmText || 'Confirm' }}
+  </button>
+
+</mat-dialog-actions>

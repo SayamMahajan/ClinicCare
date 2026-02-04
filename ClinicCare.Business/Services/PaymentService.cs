@@ -33,7 +33,7 @@ namespace ClinicCare.Business.Services
         {
             IEnumerable<Payment> payments = _currentUser.Role switch
             {
-                UserRole.Admin => await _repo.GetAllAsync(),
+                UserRole.Admin => await _paymentRepo.GetAllAsync(),
                 UserRole.Doctor => await _paymentRepo.GetPaymentsForDoctorAsync(_currentUser.UserId),
                 UserRole.Patient => await _paymentRepo.GetPaymentsForPatientAsync(_currentUser.UserId),
                 _ => throw new ForbiddenException("Invalid role")
@@ -46,7 +46,7 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var payment = await _repo.GetByIdAsync(id);
+            var payment = await _paymentRepo.GetByIdAsync(id);
             if (payment is null)
                 throw new NotFoundException($"Payment with id {id} not found.");
 

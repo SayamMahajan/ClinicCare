@@ -19,7 +19,7 @@
     @for (apt of filteredAppointments(); track apt.id) {
       <app-list-row
         [values]="[
-          getCounterpartyName(apt),
+          getUserName(apt),
           apt.date,
           getSlotLabel(apt.timeSlot)
         ]"

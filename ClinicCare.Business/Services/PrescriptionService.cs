@@ -4,6 +4,8 @@ using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
+using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Prescription;
 using ClinicCare.Shared.Enums;
 using System.Text.Json;
@@ -13,17 +15,23 @@ namespace ClinicCare.Business.Services
     public class PrescriptionService : IPrescriptionService
     {
         private readonly IGenericRepository<Prescription> _repo;
+        private readonly IPrescriptionRepository _prescriptionRepo;
         private readonly IGenericRepository<Patient> _patientRepo;
+        private readonly IGenericRepository<Appointment> _appointmentRepo;
         private readonly ICurrentUser _currentUser;
 
         public PrescriptionService(
             IGenericRepository<Prescription> repo,
+            IPrescriptionRepository prescriptionRepo,
             IGenericRepository<Patient> patientRepo,
+            IGenericRepository<Appointment> appointmentRepo,
             ICurrentUser currentUser
             )
         {
             _repo = repo;
+            _prescriptionRepo = prescriptionRepo;
             _patientRepo = patientRepo;
+            _appointmentRepo = appointmentRepo;
             _currentUser = currentUser;
         }
         public async Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync()
@@ -31,9 +39,9 @@ namespace ClinicCare.Business.Services
             IEnumerable<Prescription> prescriptions = [];
 
             if (_currentUser.Role == UserRole.Doctor)
-                prescriptions = await _repo.FindAsync(p => p.DoctorId == _currentUser.UserId);
+                prescriptions = await _prescriptionRepo.GetPrescriptionsForDoctorAsync(_currentUser.UserId);
             else if (_currentUser.Role == UserRole.Patient)
-                prescriptions = await _repo.FindAsync(p => p.PatientId == _currentUser.UserId);
+                prescriptions = await _prescriptionRepo.GetPrescriptionsForPatientAsync(_currentUser.UserId);
             else
                 throw new ForbiddenException("You are not authorized.");
 
@@ -45,7 +53,7 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var prescription = await _repo.GetByIdAsync(id);
+            var prescription = await _prescriptionRepo.GetByIdAsync(id);
             if (prescription == null)
                 throw new NotFoundException($"Prescription with id {id} not found.");
 
@@ -64,6 +72,14 @@ namespace ClinicCare.Business.Services
 
             ValidationHelper.GuidNotEmpty(dto.PatientId, "PatientId");
             ValidationHelper.GuidNotEmpty(dto.DoctorId, "DoctorId");
+            ValidationHelper.GuidNotEmpty(dto.AppointmentId, "AppointmentId");
+
+            var appointment = await _appointmentRepo.GetByIdAsync(dto.AppointmentId);
+            if (appointment is null)
+                throw new BadRequestException($"Appointment {dto.AppointmentId} not found.");
+
+            if(appointment.PrescriptionId is not null)
+                throw new BadRequestException($"Appointment {dto.AppointmentId} already had prescription.");
 
             if (_currentUser.Role != UserRole.Doctor)
                 throw new ForbiddenException(
@@ -73,7 +89,8 @@ namespace ClinicCare.Business.Services
                 throw new ForbiddenException(
                     "You can only create prescriptions for yourself.");
 
-            if (_patientRepo.GetByIdAsync(dto.PatientId) is null)
+            var patient = await _patientRepo.GetByIdAsync(dto.PatientId);
+            if (patient is null)
                 throw new BadRequestException($"Patient with id {dto.PatientId} not found.");
 
             var prescription = new Prescription
@@ -86,6 +103,7 @@ namespace ClinicCare.Business.Services
 
 
             await _repo.InsertAsync(prescription);
+            appointment.PrescriptionId = prescription.Id;
             await _repo.SaveChangesAsync();
 
             return prescription.Id;
@@ -103,8 +121,18 @@ namespace ClinicCare.Business.Services
             return new PrescriptionResponseDto
             {
                 Id = p.Id,
-                PatientId = p.PatientId,
-                DoctorId = p.DoctorId,
+                Patient = new PatientMiniDto
+                {
+                    Id = p.Patient.Id,
+                    FirstName = p.Patient.FirstName,
+                    LastName = p.Patient.LastName
+                },
+                Doctor = new DoctorMiniDto
+                {
+                    Id = p.Doctor.Id,
+                    FirstName = p.Doctor.FirstName,
+                    LastName = p.Doctor.LastName
+                },
                 Description = Deserialize(p.Description)
             };
         }

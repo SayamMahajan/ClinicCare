@@ -16,13 +16,13 @@ namespace ClinicCare.Business.Services
     {
         private readonly IGenericRepository<Appointment> _repo;
         private readonly IAppointmentRepository _appointmentRepo;
-        private readonly IGenericRepository<Employee> _employeeRepo;
+        private readonly IEmployeeRepository _employeeRepo;
         private readonly ICurrentUser _currentUser;
 
         public AppointmentService(
             IGenericRepository<Appointment> repo,
             IAppointmentRepository appointmentRepo,
-            IGenericRepository<Employee> employeeRepo,
+            IEmployeeRepository employeeRepo,
             ICurrentUser currentUser
             )
         {
@@ -32,7 +32,7 @@ namespace ClinicCare.Business.Services
             _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<AppointmentResponseDto>> GetAllAsync(AppointmentStatus? status = null)
+        public async Task<IEnumerable<AppointmentResponseDto>> GetAllAsync(AppointmentStatus? status = null, Guid? prescriptionId = null)
         {
             IEnumerable<Appointment> appointments = _currentUser.Role switch
             {
@@ -44,6 +44,9 @@ namespace ClinicCare.Business.Services
 
             if (status.HasValue)
                 appointments = appointments.Where(a => a.Status == status.Value);
+
+            if (prescriptionId.HasValue) 
+                appointments = appointments.Where(a => a.PrescriptionId == prescriptionId.Value);
 
             return appointments.Select(MapToDto);
         }
@@ -81,7 +84,7 @@ namespace ClinicCare.Business.Services
                 throw new BadRequestException(
                     "Appointments must be booked at least 24 hours in advance.");
 
-            var doctor = await _employeeRepo.GetByIdAsync(dto.DoctorId)
+            var doctor = await _employeeRepo.GetDoctorWithDetailsAsync(dto.DoctorId)
                 ?? throw new NotFoundException($"Doctor with Id{dto.DoctorId} not found.");
 
             if (doctor.Role != EmployeeRole.Doctor || doctor.DoctorDetails is null)
@@ -167,6 +170,7 @@ namespace ClinicCare.Business.Services
                 Date = a.Date,
                 TimeSlot = a.TimeSlot,
                 Status = a.Status,
+                PrescriptionId = a.PrescriptionId,
                 Patient = new PatientMiniDto
                 {
                     Id = a.Patient.Id,

@@ -13,5 +13,8 @@ namespace ClinicCare.Shared.DTOs.Prescription
         [Required]
         [MinLength(1)]
         public List<MedicationDto> Description { get; set; }
+
+        [Required]
+        public Guid AppointmentId { get; set; }
     }
 }

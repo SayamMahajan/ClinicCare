@@ -1,7 +1,6 @@
 <mat-nav-list>
 
-  @for (item of menu[role]; track item.label) {
-
+  @for (item of menu[role()]; track item.label) {
     @if (!item.children) {
       <a
         mat-list-item

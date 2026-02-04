@@ -1,7 +1,8 @@
-import { Component, Input, signal } from '@angular/core';
+import { Component, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
+import { AuthService } from '../../services/auth.service';
 
 type Role = 'Admin' | 'Doctor' | 'Patient';
 
@@ -12,13 +13,15 @@ type Role = 'Admin' | 'Doctor' | 'Patient';
   templateUrl: './app-sidenav.component.html'
 })
 export class AppSidenavComponent {
-  @Input({ required: true }) role!: Role;
+  private authService = inject(AuthService);
+
+  role = signal<Role>(this.authService.role as Role || 'Patient');
 
   readonly menu: Record<Role, any[]> = {
     Admin: [
       {
         label: 'Dashboard',
-        link: '/dashboard/admin'
+        link: '/admin/dashboard'
       },
       {
         label: 'Employees',
@@ -35,10 +38,6 @@ export class AppSidenavComponent {
 
     Doctor: [
       {
-        label: 'Dashboard',
-        link: '/dashboard/doctor'
-      },
-      {
         label: 'Appointments',
         icon: 'event',
         children: [
@@ -54,10 +53,6 @@ export class AppSidenavComponent {
     ],
 
     Patient: [
-      {
-        label: 'Dashboard',
-        link: '/dashboard/patient'
-      },
       {
         label: 'Appointments',
         children: [
