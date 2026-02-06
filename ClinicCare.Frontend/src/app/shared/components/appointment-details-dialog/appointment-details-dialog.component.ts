@@ -1,6 +1,5 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CommonModule, Time } from '@angular/common';
 import { MaterialModule } from '../../ui/material.module';
 import { AppointmentResponseDto, TimeSlot } from '../../models/appointment.model';
 import { TIME_SLOT_LABEL } from '../../utils/time-slot.mapper';
@@ -18,8 +17,7 @@ export interface AppointmentDetailsDialogData {
 
 @Component({
   selector: 'app-appointment-details-dialog',
-  standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [MaterialModule],
   templateUrl: './appointment-details-dialog.component.html'
 })
 export class AppointmentDetailsDialogComponent {

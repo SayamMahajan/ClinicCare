@@ -1,6 +1,6 @@
 import { Component, inject, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
 import { AuthService } from '../../services/auth.service';
 
@@ -15,7 +15,15 @@ type Role = 'Admin' | 'Doctor' | 'Patient';
 export class AppSidenavComponent {
   private authService = inject(AuthService);
 
-  role = signal<Role>(this.authService.role as Role || 'Patient');
+  private router = inject(Router);
+  role = signal<Role>(this.authService.role as Role);
+
+  isExpanded(item: any): boolean {
+    if (item.children?.length) {
+      return true;
+    }
+    return false
+  }
 
   readonly menu: Record<Role, any[]> = {
     Admin: [

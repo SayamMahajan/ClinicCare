@@ -29,14 +29,17 @@ export class LoginPageComponent {
       const type = this.typeParam().get('type');
 
       if (type === 'patient' || type === 'employee') {
-        this.userType.set(type);
+        if(type === 'employee')
+          this.userType.set('doctor');
+        else
+          this.userType.set('patient');
       } else {
         this.router.navigate(['/']);
       }
     });
   }
   
-  onSubmit(data: LoginFormValue) {
+  onLogin(data: LoginFormValue) {
     const request$ =
       this.userType() === 'patient'
         ? this.authService.loginPatient(data)
@@ -58,12 +61,10 @@ export class LoginPageComponent {
         } else if (role() === 'Admin') {
           this.router.navigate(['/admin/dashboard']);
         } else {
-          console.error('Unknown role', role);
           this.router.navigate(['/']);
         }
       },
       error: err => {
-        console.error('Login failed', err);
         alert('Invalid email or password');
       }
     });

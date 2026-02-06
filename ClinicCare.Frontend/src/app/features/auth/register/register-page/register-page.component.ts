@@ -2,7 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RegisterFormComponent } from '../register-form/register-form.component';
 import { MaterialModule } from '../../../../shared/ui/material.module';
-import { AuthUser, EmployeeRegisterForm, PatientRegisterForm, RegisterFormValue } from '../../../../shared/models/auth.model';
+import { AuthUser, DoctorRegisterForm, PatientRegisterForm } from '../../../../shared/models/auth.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AuthService } from "../../../../shared/services/auth.service";
@@ -30,18 +30,21 @@ export class RegisterPageComponent {
       const type = this.typeParam().get('type');
 
       if (type === 'patient' || type === 'employee') {
-        this.userType.set(type);
+        if(type === 'employee')
+          this.userType.set('doctor');
+        else
+          this.userType.set('patient');
       } else {
         this.router.navigate(['/']);
       }
     });
   }
   
-  onRegister(data: any) {
+  onRegister(data: PatientRegisterForm | DoctorRegisterForm) {
     const request$ =
       this.userType() === 'patient'
         ? this.authService.registerPatient(data as PatientRegisterForm)
-        : this.authService.registerEmployee(data as EmployeeRegisterForm);
+        : this.authService.registerEmployee(data as DoctorRegisterForm);
 
     request$.subscribe({
       next: () => {

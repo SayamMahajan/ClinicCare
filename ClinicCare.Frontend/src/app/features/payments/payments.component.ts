@@ -7,6 +7,8 @@ import { ListContainerComponent } from '../../shared/components/list-container/l
 import { ListFilterBarComponent } from '../../shared/components/list-filter-bar/list-filter-bar.component';
 import { ListRowComponent } from '../../shared/components/list-row/list-row.component';
 import { AuthService } from '../../shared/services/auth.service';
+import { PaymentDetailsDialogComponent } from '../../shared/components/payment-details-dialog/payment-details-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-payments',
@@ -21,7 +23,7 @@ import { AuthService } from '../../shared/services/auth.service';
   templateUrl: './payments.component.html'
 })
 export class PaymentsComponent {
-
+  private dialog = inject(MatDialog);
   private authService = inject(AuthService);
   private paymentService = inject(PaymentService);
 
@@ -87,6 +89,11 @@ export class PaymentsComponent {
   }
 
   onInfoClick(payment: Payment) {
-    console.log(payment);
+    this.dialog.open(PaymentDetailsDialogComponent, {
+    width: '450px',
+    data: {
+      payment
+    }
+  });
   }
 }

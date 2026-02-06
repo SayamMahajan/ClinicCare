@@ -1,0 +1,26 @@
+<div class="bg-image vh-100 d-flex align-items-center justify-content-center text-white text-center p-5"
+     [style.background-image]="imagePath()"
+     [style.background-size]="'cover'"
+     [style.background-position]="'center'"
+     [style.background-repeat]="'no-repeat'">
+
+  <div class="bg-dark bg-opacity-50 p-5 rounded">
+  <h1 class="display-3 fw-bold mb-4">Clinic Care</h1>
+
+  <div class="d-flex flex-column gap-3 align-items-center justify-content-center" style="width: 300px;">
+    <a
+      routerLink="/auth/register/patient"
+      class="btn btn-success btn-lg w-100"
+    >
+      Register
+    </a>
+
+    <select (change)='onLogin($event)'class= "form-select form-select-lg w-100 text-center">
+      <option value="" disabled selected hidden>Login</option>
+      <option value="patient">Patient</option>
+      <option value="employee">Employee</option>
+    </select>
+  </div>
+</div>
+
+</div>

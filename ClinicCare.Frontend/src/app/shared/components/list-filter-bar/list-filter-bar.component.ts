@@ -10,7 +10,7 @@ import { DropdownFilterComponent } from "../dropdown-filter/dropdown-filter.comp
 })
 export class ListFilterBarComponent {
   @Input({ required: true }) searchLabel!: string;
-  @Input({ required: true }) label!: string;
+  @Input({ required: true }) label!: string;;
   @Input({ required: true }) options!: string[];
 
   @Output() searchChange = new EventEmitter<string>();

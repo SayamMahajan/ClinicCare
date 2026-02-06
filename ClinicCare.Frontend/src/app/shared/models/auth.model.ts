@@ -1,4 +1,4 @@
-export type AuthUser = 'employee' | 'patient';
+export type AuthUser = 'doctor' | 'patient';
 export type EmployeeRole = 'Admin' | 'Doctor';
 export type Gender = 'Male' | 'Female' | 'Other';
 
@@ -25,14 +25,14 @@ export interface DoctorDetailsForm {
   firstPracticeDate: Date;
 }
 
-export interface EmployeeRegisterForm {
+export interface DoctorRegisterForm {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   dateOfJoining: Date;
   role: EmployeeRole;
-  doctorDetails?: DoctorDetailsForm;
+  doctorDetails: DoctorDetailsForm;
 }
 
 export interface AuthResponse {
@@ -42,7 +42,3 @@ export interface AuthResponse {
   email: string;
   token: string;
 }
-
-export type RegisterFormValue =
-  | { userType: 'patient'; data: PatientRegisterForm }
-  | { userType: 'employee'; data: EmployeeRegisterForm };

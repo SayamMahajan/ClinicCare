@@ -1,89 +1,81 @@
-import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MaterialModule } from '../../../../shared/ui/material.module';
 import {
+  DoctorRegisterForm,
   EmployeeRole,
   Gender,
   PatientRegisterForm,
-  EmployeeRegisterForm
 } from '../../../../shared/models/auth.model';
 
 @Component({
   selector: 'app-register-form',
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
-  templateUrl: './register-form.component.html'
+  templateUrl: './register-form.component.html',
 })
 export class RegisterFormComponent {
-  @Input({ required: true }) userType!: 'patient' | 'employee';
-  @Output() submitted = new EventEmitter<PatientRegisterForm | EmployeeRegisterForm>();
+  @Input({ required: true }) userType!: 'patient' | 'doctor';
+  @Output() submitted = new EventEmitter<PatientRegisterForm | DoctorRegisterForm>();
 
   private fb = inject(FormBuilder);
 
-  employeeRole = signal<EmployeeRole>('Admin');
+  minDob = new Date(new Date().getFullYear() - 120, new Date().getMonth(), new Date().getDate());
+  maxDob = new Date();
 
   patientForm = this.fb.nonNullable.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    dob: [null as any, Validators.required],
+    dob: [null, Validators.required],
     gender: ['Male' as Gender, Validators.required],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
-    password: ['', Validators.required]
+    password: ['', Validators.required, Validators.minLength(8)],
   });
 
-  employeeForm = this.fb.nonNullable.group({
+  doctorForm = this.fb.nonNullable.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
-    dateOfJoining: [null as any, Validators.required],
-    role: ['Admin' as EmployeeRole],
-    doctorDetails: this.fb.group({
-      specializationId: [''],
-      dob: [null as Date | null],
-      firstPracticeDate: [null as Date | null],
-      fee: [''],
-      phone: [''],
+    dateOfJoining: [null, Validators.required],
+    role: ['Doctor' as EmployeeRole],
+    doctorDetails: this.fb.nonNullable.group({
+      specializationId: ['', Validators.required],
+      dob: [null, Validators.required],
+      firstPracticeDate: [null, Validators.required],
+      fee: [0, Validators.required],
+      phone: ['', Validators.required],
     })
   });
 
-  private mapEmployeeDto(form: any) {
-    if (form.role === 'Doctor') {
-      return {
-        firstName: form.firstName,
-        lastName: form.lastName,
-        email: form.email,
-        password: form.password,
-        dateOfJoining: form.dateOfJoining,
-        role: form.role,
-        doctorDetails: form.doctorDetails
-      };
-    }
-
-    return {
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      password: form.password,
-      dateOfJoining: form.dateOfJoining,
-      role: form.role
-    };
-  }
-
-  submit() {
+  onSubmit() {
     if (this.userType === 'patient') {
       if (this.patientForm.invalid) return;
-      this.submitted.emit(this.patientForm.getRawValue());
+      const raw = this.patientForm.getRawValue();
+
+      const payload: PatientRegisterForm = {
+        ...raw,
+        dob: raw.dob!,
+      };
+      this.submitted.emit(payload);
     }
 
-    if (this.userType === 'employee') {
-      if (this.employeeForm.invalid) return;
+    if (this.userType === 'doctor') {
+      if (this.doctorForm.invalid) return;
+      const raw = this.doctorForm.getRawValue();
 
-      const raw = this.employeeForm.getRawValue();
-      const dto = this.mapEmployeeDto(raw);
+      const payload: DoctorRegisterForm = {
+        ...raw,
+        dateOfJoining: raw.dateOfJoining!, 
+        doctorDetails: {
+          ...raw.doctorDetails,
+          dob: raw.doctorDetails.dob!,
+          firstPracticeDate: raw.doctorDetails.firstPracticeDate!
+        },
+      };
 
-      this.submitted.emit(dto);
+      this.submitted.emit(payload);
     }
   }
 }

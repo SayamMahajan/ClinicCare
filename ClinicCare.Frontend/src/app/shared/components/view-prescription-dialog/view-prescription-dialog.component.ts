@@ -8,7 +8,7 @@ import { PrescriptionResponseDto } from '../../models/prescription.model';
   selector: 'app-view-prescription-dialog',
   standalone: true,
   imports: [CommonModule, MaterialModule],
-  templateUrl: './view-prescription-dialog.component.html'
+  templateUrl: './view-prescription-dialog.component.html',
 })
 export class ViewPrescriptionDialogComponent {
   dialogRef = inject(MatDialogRef<ViewPrescriptionDialogComponent>);

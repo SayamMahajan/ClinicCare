@@ -6,13 +6,14 @@ import { ListContainerComponent } from '../../../shared/components/list-containe
 import { ListRowComponent } from '../../../shared/components/list-row/list-row.component';
 import { TimeSlot } from '../../../shared/models/appointment.model';
 import { DropdownFilterComponent } from '../../../shared/components/dropdown-filter/dropdown-filter.component';
-import { DoctorResponseDto, EmployeeService } from '../../../shared/services/employee.service';
+import { EmployeeService } from '../../../shared/services/employee.service';
 import { Subject, takeUntil } from 'rxjs';
 import { AppointmentService } from '../../../shared/services/appointment.service';
 import { AuthService } from '../../../shared/services/auth.service';
 import { ConfirmDialogData } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { DoctorResponseDto } from '../../../shared/models/employee.model';
 
 
 @Component({

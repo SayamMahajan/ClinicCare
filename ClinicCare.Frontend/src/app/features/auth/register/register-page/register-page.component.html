@@ -1,8 +1,8 @@
-<mat-card class="col-12 col-md-6 mx-auto p-4">
-
-  <app-register-form
-    [userType]="userType()"
-    (submitted)="onRegister($event)"
-  />
-
-</mat-card>
+<div class="vh-100 d-flex align-items-center justify-content-center ">
+  <mat-card class="w-100 p-4" style="max-width: 720px;">
+    <app-register-form
+      [userType]="userType()"
+      (submitted)="onRegister($event)"
+    />
+  </mat-card>
+</div>

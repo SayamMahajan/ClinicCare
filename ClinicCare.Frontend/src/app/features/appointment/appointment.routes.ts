@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { DashboardLayoutComponent } from '../../shared/components/dashboard-layout/dashboard-layout.component';
+import { patientGuard } from '../../guards/patient.guard';
 
 export const APPOINTMENTS_ROUTES: Routes = [
   {
@@ -41,6 +42,7 @@ export const APPOINTMENTS_ROUTES: Routes = [
   {
     path: 'book',
     component: DashboardLayoutComponent,
+    canActivateChild: [patientGuard],
     children: [
       {
         path: '',

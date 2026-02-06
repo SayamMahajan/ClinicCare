@@ -6,10 +6,11 @@ import { AuthResponse, LoginFormValue } from '../models/auth.model';
 import { TokenService } from './token.service';
 import { DecodedToken } from '../models/token.model';
 import { jwtDecode } from 'jwt-decode';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-
+  private router = inject(Router);
   private http = inject(HttpClient);
   private tokenService = inject(TokenService);
 
@@ -18,13 +19,13 @@ export class AuthService {
   loginPatient(data: LoginFormValue): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/patients/login`, data)
-      .pipe(tap(res => this.tokenService.set(res.token)));
+      .pipe(tap((res) => this.tokenService.set(res.token)));
   }
 
   loginEmployee(data: LoginFormValue): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.baseUrl}/employees/login`, data)
-      .pipe(tap(res => this.tokenService.set(res.token)));
+      .pipe(tap((res) => this.tokenService.set(res.token)));
   }
 
   registerPatient(data: any) {
@@ -51,33 +52,52 @@ export class AuthService {
     return decoded;
   }
 
-
   get userId(): string | null {
     return (
-      this.decodedToken?.[
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'
-      ] ?? null
+      this.decodedToken?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ??
+      null
     );
   }
 
   get email(): string | null {
     return (
-      this.decodedToken?.[
-        'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
-      ] ?? null
+      this.decodedToken?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] ??
+      null
     );
   }
 
   get role(): string | null {
     return (
-      this.decodedToken?.[
-        'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
-      ] ?? null
+      this.decodedToken?.['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] ?? null
     );
   }
 
+  navigateToUrl(url: string) {
+    this.router.navigateByUrl(url, { replaceUrl: true });
+  }
 
-  get isLoggedIn(): boolean {
-    return !!this.token;
+  isTokenExpired(token: string): boolean {
+    try {
+      const decoded: any = jwtDecode(token);
+
+      if (!decoded?.exp) return true;
+
+      const expiryTime = decoded.exp * 1000; 
+      return Date.now() > expiryTime;
+    } catch {
+      return true; 
+    }
+  }
+
+  isLoggedIn(): boolean {
+    const token = this.token;
+    if (!token) return false;
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+
+    return true;
   }
 }

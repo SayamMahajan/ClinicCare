@@ -2,31 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface Employee {
-  id: number;
-  firstName: string;
-  lastName: string;
-  role: 'Admin' | 'Doctor';
-  email: string;
-  dateOfJoining: string;
-}
-
-export interface DoctorResponseDto {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: 'Admin' | 'Doctor';
-  dateOfJoining: string;
-
-  specializationId?: string;
-  fee?: number;
-  phone?: string;
-}
+import { DoctorResponseDto, Employee } from '../models/employee.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EmployeeService {
   private http = inject(HttpClient);
@@ -37,25 +16,23 @@ export class EmployeeService {
     if (role) {
       params = params.set('role', role);
     }
-    
-    return this.http.get<any>(this.baseUrl, { params }).pipe(
-      map((response: any) => Array.isArray(response) ? response : response.data || []),
-      catchError(() => of([]))
-    );
+
+    return this.http
+      .get<Employee[]>(this.baseUrl, { params })
+      .pipe(catchError(() => of([])));
   }
 
   getDoctors(specializationId?: string) {
-  let params = new HttpParams();
+    let params = new HttpParams();
 
-  if (specializationId) {
-    params = params.set('specializationId', specializationId);
+    if (specializationId) {
+      params = params.set('specializationId', specializationId);
+    }
+
+    return this.http
+      .get<DoctorResponseDto[]>(`${this.baseUrl}/doctor-details`, { params })
+      .pipe(catchError(() => of([])));
   }
-
-  return this.http
-    .get<DoctorResponseDto[]>(`${this.baseUrl}/doctor-details`, { params })
-    .pipe(catchError(() => of([])));
-}
-
 
   getById(id: string): Observable<Employee> {
     return this.http.get<Employee>(`${this.baseUrl}/${id}`);

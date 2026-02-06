@@ -6,7 +6,6 @@ import { Payment } from '../models/payment.model';
 
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
-
   private baseUrl = `${environment.apiUrl}/api/payments`;
   private http = inject(HttpClient);
 

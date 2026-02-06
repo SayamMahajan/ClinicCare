@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Payment Details</h2>
+
+<mat-dialog-content>
+
+  <mat-list>
+
+    <mat-list-item>
+      <strong>Patient:</strong>&nbsp;
+      {{ data.payment.patient.firstName }}
+      {{ data.payment.patient.lastName }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Doctor:</strong>&nbsp;
+      {{ data.payment.doctor.firstName }}
+      {{ data.payment.doctor.lastName }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Amount:</strong>&nbsp;
+      ₹{{ data.payment.amount }}
+    </mat-list-item>
+
+    <mat-list-item>
+      <strong>Date:</strong>&nbsp;
+      {{ data.payment.createdAt | date:'medium' }}
+    </mat-list-item>
+  </mat-list>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="primary" (click)="close()">
+    Close
+  </button>
+</mat-dialog-actions>

@@ -156,12 +156,6 @@ export class RequestsComponent implements OnInit, OnDestroy {
         case 'delete':
           this.deleteAppointment(id);
           break;
-        case 'addPrescription':
-          this.addPrescription(id);
-          break;
-        case 'viewPrescription':
-          this.viewPrescription(id);
-          break;
       }
     });
   }
@@ -170,11 +164,5 @@ export class RequestsComponent implements OnInit, OnDestroy {
     this.appointmentService.delete(id).subscribe(() => {
     this.loadAppointments();
     });
-  }
-
-  addPrescription(id: string) {
-  }
-
-  viewPrescription(id: string) {
   }
 }

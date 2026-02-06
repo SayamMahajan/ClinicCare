@@ -1,25 +1,25 @@
-<mat-toolbar color="primary">
-    <span class="fw-semibold">ClinicCare</span>
-    <span class="flex-grow-1"></span>
+<mat-toolbar color="primary" class="px-3">
+  <span class="fw-semibold text-success">Clinic Care</span>
 
-    <button
-        mat-icon-button
-        [matMenuTriggerFor]="menu"
-        aria-label="User menu"
-        >
-        <mat-icon>account_circle</mat-icon>
+  <span class="flex-grow-1"></span>
+
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="menu"
+    aria-label="User menu"
+  >
+    <mat-icon>account_circle</mat-icon>
+  </button>
+
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="profile.emit()">
+      <mat-icon color="primary">person</mat-icon>
+      <span>My Profile</span>
     </button>
 
-    <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="profile.emit()">
-            <mat-icon>person</mat-icon>
-            <span>My Profile</span>
-        </button>
-
-        <button mat-menu-item (click)="logout.emit()">
-            <mat-icon>logout</mat-icon>
-            <span>Logout</span>
-        </button>
-    </mat-menu>
-
+    <button mat-menu-item (click)="logout.emit()">
+      <mat-icon color="warn">logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
 </mat-toolbar>

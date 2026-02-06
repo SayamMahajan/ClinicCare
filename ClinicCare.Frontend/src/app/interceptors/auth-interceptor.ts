@@ -1,14 +1,19 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { finalize } from 'rxjs';
 import { TokenService } from '../shared/services/token.service';
+import { LoaderService } from '../shared/services/loader.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const tokenService = inject(TokenService);
-  const token = tokenService.get();
 
-  if (req.url.includes('/login') || req.url.includes('/register')) {
-    return next(req);
+  const tokenService = inject(TokenService);
+  const loader = inject(LoaderService);
+
+  if (!req.url.includes('/login') && !req.url.includes('/register')) {
+    loader.show();
   }
+
+  const token = tokenService.get();
 
   if (token) {
     req = req.clone({
@@ -18,5 +23,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
-  return next(req);
+  return next(req).pipe(
+    finalize(() => {
+      loader.hide();
+    })
+  );
 };

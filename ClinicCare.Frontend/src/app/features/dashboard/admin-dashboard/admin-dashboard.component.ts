@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
-import { AnalyticsComponent, AnalyticsStat } from '../../../shared/components/analytics/analytics.component';
+import {
+  AnalyticsComponent,
+  AnalyticsStat,
+} from '../../../shared/components/analytics/analytics.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   imports: [AnalyticsComponent],
-  templateUrl: './admin-dashboard.component.html'
+  templateUrl: './admin-dashboard.component.html',
 })
 export class AdminDashboardComponent {
   stats: AnalyticsStat[] = [
@@ -19,6 +22,6 @@ export class AdminDashboardComponent {
     {
       label: 'Active Doctors',
       value: '--',
-    }
+    },
   ];
 }

@@ -1,22 +1,30 @@
-<mat-nav-list>
+<mat-nav-list class="px-2">
 
   @for (item of menu[role()]; track item.label) {
+
     @if (!item.children) {
       <a
         mat-list-item
         [routerLink]="item.link"
-        routerLinkActive="active"
+        routerLinkActive
+        #rla="routerLinkActive"
+        [activated]="rla.isActive"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="rounded-3 my-1"
       >
-        <span matLine>{{ item.label }}</span>
+        {{ item.label }}
       </a>
     }
 
     @if (item.children) {
-      <mat-expansion-panel class="border-0 shadow-none">
+      <mat-expansion-panel
+        class="shadow-none border-0"
+        [expanded]="isExpanded(item)"
+      >
 
         <mat-expansion-panel-header>
-          <mat-panel-title class="d-flex align-items-center gap-2">
-            <span>{{ item.label }}</span>
+          <mat-panel-title>
+            {{ item.label }}
           </mat-panel-title>
         </mat-expansion-panel-header>
 
@@ -24,8 +32,11 @@
           <a
             mat-list-item
             [routerLink]="child.link"
-            routerLinkActive="active"
-            class="ps-5"
+            routerLinkActive
+            #crla="routerLinkActive"
+            [activated]="crla.isActive"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="ps-4 rounded-3 my-1"
           >
             {{ child.label }}
           </a>
@@ -33,6 +44,7 @@
 
       </mat-expansion-panel>
     }
+
   }
 
 </mat-nav-list>
