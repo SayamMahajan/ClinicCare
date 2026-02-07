@@ -38,15 +38,15 @@ export class MyProfileComponent implements OnInit {
 
   ngOnInit() {
     if (this.role() === 'Patient') {
-      this.loadPatientProfile();
+      // this.loadPatientProfile();
     }
   }
 
-  loadPatientProfile() {
-    this.patientService.getMyProfile().subscribe(profile => {
-      this.form.patchValue(profile);
-    });
-  }
+  // loadPatientProfile() {
+  //   this.patientService.getMyProfile().subscribe(profile => {
+  //     this.form.patchValue(profile);
+  //   });
+  // }
 
   save() {
     const raw = this.form.getRawValue();

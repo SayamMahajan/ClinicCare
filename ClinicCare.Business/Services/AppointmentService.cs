@@ -136,12 +136,14 @@ namespace ClinicCare.Business.Services
 
             if(dto.Status is not null && _currentUser.Role == UserRole.Doctor)
                 appointment.Status = dto.Status.Value;
-            
-            if(dto.Date is not null)
-                ValidationHelper.DateNotInPast(dto.Date.Value, nameof(dto.Date));
-                appointment.Date = dto.Date!.Value;
 
-            if(dto.TimeSlot is not null)
+            if (dto.Date is not null)
+            {
+                ValidationHelper.DateNotInPast(dto.Date.Value, nameof(dto.Date));
+                appointment.Date = dto.Date.Value;
+            }
+
+            if (dto.TimeSlot is not null)
                 appointment.TimeSlot = dto.TimeSlot!.Value;
 
             await _repo.SaveChangesAsync();

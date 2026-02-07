@@ -39,10 +39,6 @@ export class EmployeeService {
   }
 
   update(id: string, employee: Partial<Employee>): Observable<Employee> {
-    return this.http.put<Employee>(`${this.baseUrl}/${id}`, employee);
-  }
-
-  patch(id: string, employee: Partial<Employee>): Observable<Employee> {
     return this.http.patch<Employee>(`${this.baseUrl}/${id}`, employee);
   }
 

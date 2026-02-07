@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MaterialModule } from '../../../../shared/ui/material.module';
@@ -8,6 +8,8 @@ import {
   Gender,
   PatientRegisterForm,
 } from '../../../../shared/models/auth.model';
+import { SpecializationService } from '../../../../shared/services/specialization';
+import { SpecializationResponse } from '../../../../shared/models/specialization.model';
 
 @Component({
   selector: 'app-register-form',
@@ -18,7 +20,23 @@ export class RegisterFormComponent {
   @Input({ required: true }) userType!: 'patient' | 'doctor';
   @Output() submitted = new EventEmitter<PatientRegisterForm | DoctorRegisterForm>();
 
+  private specializationService = inject(SpecializationService);
   private fb = inject(FormBuilder);
+
+  specializations= signal<SpecializationResponse[]>([]);
+
+  ngOnInit() {
+  if (this.userType === 'doctor') {
+    this.loadSpecializations();
+  }
+}
+
+  loadSpecializations() {
+    this.specializationService.getAll().subscribe({
+      next: (data) => (this.specializations.set(data)),
+      error: () => (this.specializations.set([]))
+    });
+}
 
   minDob = new Date(new Date().getFullYear() - 120, new Date().getMonth(), new Date().getDate());
   maxDob = new Date();

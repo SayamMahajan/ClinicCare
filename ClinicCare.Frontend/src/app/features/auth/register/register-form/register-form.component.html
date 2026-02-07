@@ -100,8 +100,16 @@
           <div class="col-12 col-md-6 ">
             <mat-form-field appearance="outline" class="w-100">
               <mat-label>Specialization</mat-label>
-              <input matInput formControlName="specializationId" />
+              
+              <mat-select formControlName="specializationId">
+                @for (spec of specializations(); track spec) {
+                <mat-option [value]="spec.id">
+                  {{ spec.type }}
+                  </mat-option>
+                }
+              </mat-select>
             </mat-form-field>
+
           </div>
 
           <div class="col-12 col-md-6 ">

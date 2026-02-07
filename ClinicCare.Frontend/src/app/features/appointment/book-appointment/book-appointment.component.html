@@ -22,10 +22,10 @@
         <app-list-row
           [values]="[
             doc.firstName + ' ' + doc.lastName,
-            doc.specializationId ?? '-',
+            getSpecializationName(doc.specializationId),
             getExperienceYears(doc.dateOfJoining),
             doc.fee ? '₹' + doc.fee : '-',
-            doc.phone ?? '-'
+            doc.phone
           ]"
           actionType="select"
           [selected]="isSelected(doc)"

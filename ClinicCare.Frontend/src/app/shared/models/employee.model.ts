@@ -16,8 +16,7 @@ export interface DoctorResponseDto {
   email: string;
   role: 'Admin' | 'Doctor';
   dateOfJoining: string;
-
-  specializationId?: string;
-  fee?: number;
-  phone?: string;
+  specializationId: string;
+  fee: number;
+  phone: string;
 }

@@ -4,7 +4,7 @@ import { MaterialModule } from '../../../shared/ui/material.module';
 import { ListFilterBarComponent } from '../../../shared/components/list-filter-bar/list-filter-bar.component';
 import { ListContainerComponent } from '../../../shared/components/list-container/list-container.component';
 import { ListRowComponent } from '../../../shared/components/list-row/list-row.component';
-import { TimeSlot } from '../../../shared/models/appointment.model';
+import { AppointmentCreateDto, TimeSlot } from '../../../shared/models/appointment.model';
 import { DropdownFilterComponent } from '../../../shared/components/dropdown-filter/dropdown-filter.component';
 import { EmployeeService } from '../../../shared/services/employee.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -14,6 +14,8 @@ import { ConfirmDialogData } from '../../../shared/components/confirm-dialog/con
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { DoctorResponseDto } from '../../../shared/models/employee.model';
+import { SpecializationService } from '../../../shared/services/specialization';
+import { buildSpecializationMap } from '../../../shared/utils/specialization-map.util';
 
 
 @Component({
@@ -33,6 +35,9 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   private employeeService = inject(EmployeeService);
   private appointmentService = inject(AppointmentService);
   private authService = inject(AuthService);
+  private specializationService = inject(SpecializationService);
+
+  specializationMap = signal<Map<string, string>>(new Map());
   private destroy$ = new Subject<void>();
 
   patientId = this.authService.userId || '';
@@ -49,7 +54,23 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   submitting = signal(false);
 
   ngOnInit() {
-    this.loadDoctors();
+  this.loadDoctors();
+  this.loadSpecializations();
+}
+
+  loadSpecializations() {
+    this.specializationService.getAll()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.specializationMap.set(
+            buildSpecializationMap(data)
+          );
+        },
+        error: () => {
+          this.specializationMap.set(new Map());
+        }
+      });
   }
 
   ngOnDestroy() {
@@ -76,6 +97,10 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
       });
   }
 
+  getSpecializationName(id: string): string {
+    return this.specializationMap().get(id) ?? '-';
+  }
+
   onSpecializationChange(value: string) {
     this.selectedSpecialization.set(value);
     this.selectedDoctor.set(null);
@@ -85,14 +110,12 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
       : this.loadDoctors(value);
   }
 
-  specializations = computed(() => [
-    'All',
-    ...new Set(
-      this.doctors()
-        .map(d => d.specializationId)
-        .filter(Boolean) as string[]
-    )
-  ]);
+  specializations = computed((): string[] => {
+    return [
+      'All',
+      ...Array.from(this.specializationMap().values())
+    ];
+  });
 
   filteredDoctors = computed(() =>
     this.doctors().filter(d =>
@@ -145,7 +168,10 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
       message: 'Please review your appointment details before confirming.',
       details: [
         { label: 'Doctor', value: `${doctor.firstName} ${doctor.lastName}` },
-        { label: 'Specialization', value: doctor.specializationId ?? '-' },
+        {
+          label: 'Specialization',
+          value: this.getSpecializationName(doctor.specializationId)
+        },
         { label: 'Date', value: this.selectedDate()!.toDateString() },
         { label: 'Time Slot', value: this.selectedSlot()! },
         ...(doctor.fee
@@ -169,6 +195,7 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
         }
       });
   }
+  
   createAppointment() {
     const payload = {
       patientId: this.patientId,

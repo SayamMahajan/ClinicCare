@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AppointmentResponseDto, AppointmentStatus } from '../models/appointment.model';
+import { AppointmentCreateDto, AppointmentResponseDto, AppointmentStatus } from '../models/appointment.model';
 
 @Injectable({
   providedIn: 'root'

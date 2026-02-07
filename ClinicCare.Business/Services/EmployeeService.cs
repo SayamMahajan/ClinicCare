@@ -94,7 +94,8 @@ namespace ClinicCare.Business.Services
                 if (dto.DoctorDetails is null)
                     throw new BadRequestException("Doctor details required");
 
-                if(_specializationRepo.GetByIdAsync(dto.DoctorDetails.SpecializationId) is null)
+                var spec = await _specializationRepo.GetByIdAsync(dto.DoctorDetails.SpecializationId);
+                if (spec is null)
                     throw new BadRequestException($"Specialization with id {dto.DoctorDetails.SpecializationId} not found.");
 
                 if (dto.DoctorDetails.Fee < 0)
