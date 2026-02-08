@@ -1,6 +1,8 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Payment;
+using ClinicCare.Shared.DTOs.Prescription;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,17 +20,18 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginatedResult<PaymentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery]PaymentSearchParams searchParams)
         {
-            var payments = await _paymentService.GetAllAsync();
+            var payments = await _paymentService.GetAllAsync(searchParams);
             return Ok(payments);
         }
 
         [HttpGet("{id}", Name = "GetPaymentById")]
-        [ProducesResponseType(typeof(IEnumerable<PaymentResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaymentResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]

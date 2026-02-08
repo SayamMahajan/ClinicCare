@@ -1,6 +1,7 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,29 +44,31 @@ namespace ClinicCare.Api.Controllers
         }
 
         [AllowAnonymous]
-        //[Authorize(Roles = "Admin")]
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<EmployeeResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginatedResult<EmployeeResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync([FromQuery] EmployeeRole? role)
+        public async Task<IActionResult> GetAllAsync([FromQuery] EmployeeSearchParams searchParams)
         {
-            var result = await _service.GetAllAsync(role);
+            var result = await _service.GetAllAsync(searchParams);
             return Ok(result);
         }
 
-        [HttpGet("doctor-details")]
-        [ProducesResponseType(typeof(IEnumerable<EmployeeResponseDto>), StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-dashboard")]
+        [ProducesResponseType(typeof(AdminDashboardResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllDoctorsAsync([FromQuery] Guid? specializationId)
+        public async Task<IActionResult> GetAdminDashboardAsync()
         {
-            var result = await _service.GetAllDoctorsAsync(specializationId);
-            return Ok(result);
+            var dashboard = await _service.GetAdminDashboardAsync();
+            return Ok(dashboard);
         }
 
         [HttpGet("{id}", Name = "GetEmployeeById")]
-        [ProducesResponseType(typeof(IEnumerable<EmployeeResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EmployeeResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]

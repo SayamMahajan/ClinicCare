@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ClinicCare.Shared.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -17,21 +18,12 @@ namespace ClinicCare.DataAccess.Models
         public Guid SpecializationId { get; set; }
 
         [Required]
-        public DateTime DOB { get; set; }
+        public DateOnly FirstPracticeDate { get; set; }
 
-        [Required]
-        public DateTime FirstPracticeDate { get; set; }
-
-        [Required]
-        [Phone]
-        [MaxLength(15)]
-        public string Phone { get; set; }
-
-        // Navigation property
         [ForeignKey(nameof(DoctorId))]
         public Employee Employee { get; set; }
 
         [ForeignKey(nameof(SpecializationId))]
-        public DoctorSpecialization DoctorSpecialization { get; set; }
+        public Specialization Specialization { get; set; }
     }
 }

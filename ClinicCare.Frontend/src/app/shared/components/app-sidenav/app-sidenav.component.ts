@@ -1,5 +1,4 @@
-import { Component, inject, Input, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
 import { AuthService } from '../../services/auth.service';
@@ -57,6 +56,10 @@ export class AppSidenavComponent {
       {
         label: 'Payments',
         link: '/payments'
+      },
+      {
+        label: 'Prescriptions',
+        route: '/prescriptions',
       }
     ],
 
@@ -73,6 +76,10 @@ export class AppSidenavComponent {
       {
         label: 'Payments',
         link: '/payments'
+      },
+      {
+        label: 'Prescriptions',
+        route: '/prescriptions',
       }
     ]
   };

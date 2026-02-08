@@ -7,7 +7,7 @@ namespace ClinicCare.Shared.DTOs.Appointment
     {
         [EnumDataType(typeof(AppointmentStatus))]
         public AppointmentStatus? Status { get; set; }
-        public DateTime? Date { get; set; }
+        public DateOnly? Date { get; set; }
 
         [EnumDataType(typeof(TimeSlotType))]
         public TimeSlotType? TimeSlot { get; set; }

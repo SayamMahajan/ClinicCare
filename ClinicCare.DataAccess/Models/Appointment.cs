@@ -19,16 +19,18 @@ namespace ClinicCare.DataAccess.Models
         public AppointmentStatus Status { get; set; } 
 
         [Required]
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
 
         [Required]
         public TimeSlotType TimeSlot { get; set; }
 
-        public Guid? PaymentId { get; set; }
+        [Required]
+        public Guid PaymentId { get; set; }
 
         public Guid? PrescriptionId { get; set; }
 
-        //Navigation properties
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         [ForeignKey(nameof(PatientId))]
         public Patient Patient { get; set; }
 
@@ -36,7 +38,7 @@ namespace ClinicCare.DataAccess.Models
         public Employee Doctor { get; set; }
 
         [ForeignKey(nameof(PaymentId))]
-        public Payment? Payment { get; set; }
+        public Payment Payment { get; set; }
 
         [ForeignKey(nameof(PrescriptionId))]
         public Prescription? Prescription { get; set; }

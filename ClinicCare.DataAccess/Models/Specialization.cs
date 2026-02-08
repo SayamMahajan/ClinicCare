@@ -2,7 +2,7 @@
 
 namespace ClinicCare.DataAccess.Models
 {
-    public class DoctorSpecialization
+    public class Specialization
     {
         [Key]
         public Guid Id { get; set; }

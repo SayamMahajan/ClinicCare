@@ -5,6 +5,7 @@ using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Business.Utils;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
 
@@ -12,17 +13,17 @@ namespace ClinicCare.Business.Services
 {
     public class PatientService : IPatientService
     {
-        private readonly IGenericRepository<Patient> _repo;
+        private readonly IPatientRepository _patientRepo;
         private readonly IJwtTokenGenerator _jwt;
         private readonly ICurrentUser _currentUser;
 
         public PatientService(
-            IGenericRepository<Patient> repo,
+            IPatientRepository patientRepo,
             IJwtTokenGenerator jwt,
             ICurrentUser currentUser
             )
         {
-            _repo = repo;
+            _patientRepo = patientRepo;
             _jwt = jwt;
             _currentUser = currentUser;
             
@@ -34,8 +35,7 @@ namespace ClinicCare.Business.Services
 
             dto.Email = NormalizationHelper.NormalizeKey(dto.Email);
 
-            var patients = await _repo.FindAsync(p => dto.Email == p.Email);
-            var patient = patients.FirstOrDefault();
+            var patient = await _patientRepo.GetByEmailAsync(dto.Email);
 
             if (patient is null || !PasswordHelper.Verify(dto.Password, patient.Password))
                 throw new UnauthorizedException("Invalid email or password.");
@@ -62,10 +62,9 @@ namespace ClinicCare.Business.Services
             dto.Phone = dto.Phone.Trim();
             dto.Password = dto.Password.Trim();
 
-            var exists = await _repo
-                .FindAsync(p => p.Email == dto.Email);
+            var patientExists =  await _patientRepo.GetByEmailAsync(dto.Email);
 
-            if (exists.Any())
+            if (patientExists is not null)
                 throw new ConflictException("Email already registered");
 
             PasswordHelper.Validate(dto.Password);
@@ -83,24 +82,28 @@ namespace ClinicCare.Business.Services
                 Password = hashedPassword
             };
 
-            await _repo.InsertAsync(patient);
-            await _repo.SaveChangesAsync();
+            await _patientRepo.InsertAsync(patient);
+            await _patientRepo.SaveChangesAsync();
 
             return patient.Id;
         }
 
-        public async Task<IEnumerable<PatientResponseDto>> GetAllAsync()
+        public async Task<PaginatedResult<PatientResponseDto>> GetAllAsync(PaginationParams pagination)
         {
-            var patients = await _repo.GetAllAsync();
+            PaginatedResult<Patient> result = _currentUser.Role switch
+            {
+                UserRole.Admin => await _patientRepo.GetAllAsync(pagination),
+                UserRole.Doctor => await _patientRepo.GetAllAsync(pagination),
+                _ => throw new ForbiddenException("Cannot view details")
+            };
 
-            return patients.Select(MapToDto);
+            return MapPaginatedResult(result);
         }
-
         public async Task<PatientResponseDto?> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var patient = await _repo.GetByIdAsync(id);
+            var patient = await _patientRepo.GetByIdAsync(id);
             if (patient is null)
                 throw new NotFoundException($"Patient with id {id} not found.");
 
@@ -115,7 +118,7 @@ namespace ClinicCare.Business.Services
             ValidationHelper.GuidNotEmpty(id, nameof(id));
             ValidationHelper.NotNull(dto, "Patient data is required.");
 
-            var patient = await _repo.GetByIdAsync(id)
+            var patient = await _patientRepo.GetByIdAsync(id)
                 ?? throw new NotFoundException($"Patient with id {id} not found.");
 
             if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
@@ -131,9 +134,6 @@ namespace ClinicCare.Business.Services
 
             if (dto.Phone is not null)
                 patient.Phone = dto.Phone.Trim();
-
-            if (dto.Address is not null)
-                patient.Address = dto.Address.Trim();
 
             if (dto.Password is not null)
             {
@@ -160,23 +160,37 @@ namespace ClinicCare.Business.Services
             if (dto.Address is not null)
                 patient.Address = NormalizationHelper.NormalizeKey(dto.Address);
 
-            await _repo.SaveChangesAsync();
+            await _patientRepo.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var patient = await _repo.GetByIdAsync(id);
+            var patient = await _patientRepo.GetByIdAsync(id);
             if (patient is null)
                 throw new NotFoundException($"Patient with id {id} not found.");
 
             if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != id)
                 throw new ForbiddenException("You are not authorized");
 
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
+            await _patientRepo.DeleteAsync(id);
+            await _patientRepo.SaveChangesAsync();
         }
+
+        private PaginatedResult<PatientResponseDto> MapPaginatedResult(PaginatedResult<Patient> result)
+        {
+            return new PaginatedResult<PatientResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
+        }
+
         private static PatientResponseDto MapToDto(Patient p)
         {
             return new PatientResponseDto

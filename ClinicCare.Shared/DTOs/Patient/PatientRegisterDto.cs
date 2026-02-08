@@ -14,7 +14,7 @@ namespace ClinicCare.Shared.DTOs.Patient
         public string LastName { get; set; }
 
         [Required]
-        public DateTime DOB { get; set; }
+        public DateOnly DOB { get; set; }
 
         [Required]
         [EnumDataType(typeof(Gender))]

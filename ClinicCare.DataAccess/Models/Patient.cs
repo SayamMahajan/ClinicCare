@@ -18,7 +18,7 @@ namespace ClinicCare.DataAccess.Models
         public string LastName { get; set; } = string.Empty;
 
         [Required]
-        public DateTime DOB { get; set; }
+        public DateOnly DOB { get; set; }
 
         [Required]
         public Gender Gender { get; set; }
@@ -58,7 +58,8 @@ namespace ClinicCare.DataAccess.Models
         [MaxLength(500)]
         public string? Address { get; set; }
 
-        // Navigation properties
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public ICollection<Appointment> Appointments { get; set; } = [];
         public ICollection<Payment> PaymentsSent { get; set; } = [];
         public ICollection<Prescription> Prescriptions { get; set; } = [];

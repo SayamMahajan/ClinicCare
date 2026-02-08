@@ -1,11 +1,10 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
-using ClinicCare.DataAccess.Models;
 using ClinicCare.Shared.DTOs.Appointment;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ClinicCare.Api.Controllers
 {
@@ -21,17 +20,18 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<AppointmentResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginatedResult<AppointmentResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentStatus? status, [FromQuery] Guid? prescriptionId)
+        public async Task<IActionResult> GetAllAsync([FromQuery] AppointmentSearchParams searchParams)
         {
-            var appointments = await _appointmentService.GetAllAsync(status, prescriptionId);
+            var appointments = await _appointmentService.GetAllAsync(searchParams);
             return Ok(appointments);
         }
 
         [HttpGet("{id}", Name = "GetAppointmentById")]
-        [ProducesResponseType(typeof(IEnumerable<AppointmentResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AppointmentResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
@@ -89,7 +89,7 @@ namespace ClinicCare.Api.Controllers
         public async Task<IActionResult> DeleteAsync(Guid id)
         {
             await _appointmentService.DeleteAsync(id);
-            return NoContent(); ;
+            return NoContent();
         }
     }
 }

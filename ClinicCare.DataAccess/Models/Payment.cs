@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ClinicCare.Shared.Enums;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,22 +11,29 @@ namespace ClinicCare.DataAccess.Models
         public Guid Id { get; set; }
 
         [Required]
+        [MaxLength(30)]
+        public string TransactionId { get; set; }
+
+        [Required]
         [Precision(10, 2)]
         public decimal Amount { get; set; }
 
         [Required]
-        public Guid RecipientId { get; set; }
+        public PaymentType Type { get; set; }
 
         [Required]
-        public Guid SenderId { get; set; }
+        public Guid PatientId { get; set; }
 
+        [Required]
+        public Guid DoctorId { get; set; }
+
+        [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties
-        [ForeignKey(nameof(RecipientId))]
-        public Employee Recipient { get; set; }
+        [ForeignKey(nameof(PatientId))]
+        public Patient Patient { get; set; }
 
-        [ForeignKey(nameof(SenderId))]
-        public Patient Sender { get; set; }
+        [ForeignKey(nameof(DoctorId))]
+        public Employee Doctor { get; set; }
     }
 }

@@ -18,7 +18,8 @@ namespace ClinicCare.DataAccess.Models
         [MaxLength(1000)]
         public string Description { get; set; } 
 
-        // Navigation properties
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         [ForeignKey(nameof(PatientId))]
         public Patient Patient { get; set; }
 

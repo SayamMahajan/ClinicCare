@@ -1,12 +1,17 @@
 ﻿using ClinicCare.DataAccess.Models;
-using ClinicCare.Shared.Enums;
+using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 
 namespace ClinicCare.DataAccess.Repositories.Interfaces
 {
-    public interface IEmployeeRepository
+    public interface IEmployeeRepository : IGenericRepository<Employee>
     {
-        Task<IEnumerable<Employee>> GetAllAsync();
-        Task<IEnumerable<Employee>> GetDoctorsAsync(Guid? specializationId);
-        Task<Employee?> GetDoctorWithDetailsAsync(Guid doctorId);
+        Task<PaginatedResult<Employee>> GetAllAsync(EmployeeSearchParams searchParams);
+
+        Task<int> GetTotalDoctorsCountAsync();
+
+        Task<Employee?> GetDoctorByIdAsync(Guid doctorId);
+
+        Task<Employee?> GetByEmailAsync(string email);
     }
 }

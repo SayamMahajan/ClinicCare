@@ -6,57 +6,51 @@ using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Appointment;
 using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.Enums;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 namespace ClinicCare.Business.Services
 {
     public class AppointmentService : IAppointmentService
     {
-        private readonly IGenericRepository<Appointment> _repo;
         private readonly IAppointmentRepository _appointmentRepo;
         private readonly IEmployeeRepository _employeeRepo;
+        private readonly IPaymentService _paymentService;
         private readonly ICurrentUser _currentUser;
 
         public AppointmentService(
-            IGenericRepository<Appointment> repo,
             IAppointmentRepository appointmentRepo,
             IEmployeeRepository employeeRepo,
+            IPaymentService paymentService,
             ICurrentUser currentUser
             )
         {
-            _repo = repo;
             _appointmentRepo = appointmentRepo;
             _employeeRepo = employeeRepo;
+            _paymentService = paymentService;
             _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<AppointmentResponseDto>> GetAllAsync(AppointmentStatus? status = null, Guid? prescriptionId = null)
+        public async Task<PaginatedResult<AppointmentResponseDto>> GetAllAsync(AppointmentSearchParams searchParams)
         {
-            IEnumerable<Appointment> appointments = _currentUser.Role switch
+            PaginatedResult<Appointment> result = _currentUser.Role switch
             {
-                UserRole.Admin => await _appointmentRepo.GetAllWithDetailsAsync(),
-                UserRole.Doctor => await _appointmentRepo.GetByDoctorIdAsync(_currentUser.UserId),
-                UserRole.Patient => await _appointmentRepo.GetByPatientIdAsync(_currentUser.UserId),
+                UserRole.Admin => await _appointmentRepo.GetAllAsync(searchParams),
+                UserRole.Doctor => await _appointmentRepo.GetAllAsync(searchParams, patientId: null, doctorId: _currentUser.UserId) ,
+                UserRole.Patient => await _appointmentRepo.GetAllAsync(searchParams, patientId: _currentUser.UserId, doctorId: null),
                 _ => throw new ForbiddenException("Invalid role")
+
             };
 
-            if (status.HasValue)
-                appointments = appointments.Where(a => a.Status == status.Value);
-
-            if (prescriptionId.HasValue) 
-                appointments = appointments.Where(a => a.PrescriptionId == prescriptionId.Value);
-
-            return appointments.Select(MapToDto);
+            return MapPaginatedResult(result);
         }
-
 
         public async Task<AppointmentResponseDto?> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var appointment = await _appointmentRepo.GetByIdWithDetailsAsync(id);
+            var appointment = await _appointmentRepo.GetByIdAsync(id);
             if (appointment is null)
                 throw new NotFoundException($"Appointment with id {id} not found.");
 
@@ -73,18 +67,15 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(dto.PatientId, nameof(dto.PatientId));
             ValidationHelper.GuidNotEmpty(dto.DoctorId, nameof(dto.DoctorId));
+            ValidationHelper.GuidNotEmpty(dto.PaymentId, nameof(dto.PaymentId));
 
             if (_currentUser.Role == UserRole.Patient &&
                 _currentUser.UserId != dto.PatientId)
                 throw new ForbiddenException("You can book only for yourself.");
 
-            ValidationHelper.DateNotInPast(dto.Date, nameof(dto.Date));
+            ValidationHelper.DateAtLeast24HoursAdvance(dto.Date, nameof(dto.Date));
 
-            if (dto.Date < DateTime.UtcNow.AddHours(24))
-                throw new BadRequestException(
-                    "Appointments must be booked at least 24 hours in advance.");
-
-            var doctor = await _employeeRepo.GetDoctorWithDetailsAsync(dto.DoctorId)
+            var doctor = await _employeeRepo.GetDoctorByIdAsync(dto.DoctorId)
                 ?? throw new NotFoundException($"Doctor with Id{dto.DoctorId} not found.");
 
             if (doctor.Role != EmployeeRole.Doctor || doctor.DoctorDetails is null)
@@ -93,14 +84,11 @@ namespace ClinicCare.Business.Services
             var specializationId =
                 doctor.DoctorDetails.SpecializationId;
 
-            var patientAppointments =
-                await _appointmentRepo.GetByPatientIdAsync(dto.PatientId);
+            var patientAppointments = await _appointmentRepo.GetPatientAppointmentsForConflictCheckAsync(
+                dto.PatientId, dto.Date, dto.TimeSlot);
 
-            var conflict = patientAppointments.Any(a =>
-                a.Date == dto.Date &&
-                a.TimeSlot == dto.TimeSlot &&
-                a.Status != AppointmentStatus.Cancelled &&
-                a.Doctor.DoctorDetails!.SpecializationId == specializationId);
+            var conflict = patientAppointments.Any(a => a.Doctor.DoctorDetails!.SpecializationId == specializationId);
+
 
             if (conflict)
                 throw new ConflictException(
@@ -112,12 +100,13 @@ namespace ClinicCare.Business.Services
                 PatientId = dto.PatientId,
                 DoctorId = dto.DoctorId,
                 Date = dto.Date,
+                PaymentId = dto.PaymentId,
                 TimeSlot = dto.TimeSlot,
                 Status = AppointmentStatus.Requested
             };
 
-            await _repo.InsertAsync(appointment);
-            await _repo.SaveChangesAsync();
+            await _appointmentRepo.InsertAsync(appointment);
+            await _appointmentRepo.SaveChangesAsync();
 
             return appointment.Id;
         }
@@ -127,15 +116,30 @@ namespace ClinicCare.Business.Services
             ValidationHelper.GuidNotEmpty(id, nameof(id));
             ValidationHelper.NotNull(dto, "Appointment data is required.");
 
-            var appointment = await _repo.GetByIdAsync(id);
+            var appointment = await _appointmentRepo.GetByIdAsync(id);
             if (appointment is null) 
                 throw new NotFoundException($"Appointment with Id{id} not found.");
+
+            if(_currentUser.Role != UserRole.Doctor)
+                throw new ForbiddenException("You are not authorized");
 
             if(_currentUser.Role == UserRole.Doctor && appointment.DoctorId != _currentUser.UserId)
                 throw new ForbiddenException("You are not authorized");
 
-            if(dto.Status is not null && _currentUser.Role == UserRole.Doctor)
+            if (appointment.Status == AppointmentStatus.Cancelled || appointment.Status == AppointmentStatus.Completed)
+                throw new BadRequestException("Can't update this appointment");
+
+            if (dto.Status == AppointmentStatus.Completed && appointment.Prescription is null)
+                throw new BadRequestException("No prescription assigned yet.");
+
+            if(dto.Status is not null)
+            {
+                if(dto.Status == AppointmentStatus.Cancelled)
+                {
+                    await _paymentService.ProcessCancellationRefundAsync(appointment);
+                }
                 appointment.Status = dto.Status.Value;
+            }              
 
             if (dto.Date is not null)
             {
@@ -146,22 +150,43 @@ namespace ClinicCare.Business.Services
             if (dto.TimeSlot is not null)
                 appointment.TimeSlot = dto.TimeSlot!.Value;
 
-            await _repo.SaveChangesAsync();
+            await _appointmentRepo.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var appointment = await _repo.GetByIdAsync(id);
+            var appointment = await _appointmentRepo.GetByIdAsync(id);
             if (appointment is null)
                 throw new NotFoundException($"Appointment with Id{id} not found.");
 
-            if(_currentUser.Role == UserRole.Patient && appointment.PatientId != _currentUser.UserId && appointment.Status != AppointmentStatus.Completed)
+            if (_currentUser.Role == UserRole.Patient && appointment.PatientId != _currentUser.UserId)
                 throw new ForbiddenException("You are not authorized");
 
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
+            if (_currentUser.Role == UserRole.Doctor && appointment.DoctorId != _currentUser.UserId)
+                throw new ForbiddenException("You are not authorized");
+
+            if (appointment.Status == AppointmentStatus.Approved || appointment.Status == AppointmentStatus.Requested)
+            {
+                await _paymentService.ProcessCancellationRefundAsync(appointment);
+            }
+
+            await _appointmentRepo.DeleteAsync(id);
+            await _appointmentRepo.SaveChangesAsync();
+        }
+
+        private PaginatedResult<AppointmentResponseDto> MapPaginatedResult(PaginatedResult<Appointment> result)
+        {
+            return new PaginatedResult<AppointmentResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
         }
 
         private static AppointmentResponseDto MapToDto(Appointment a)
@@ -184,7 +209,8 @@ namespace ClinicCare.Business.Services
                     Id = a.Doctor.Id,
                     FirstName = a.Doctor.FirstName,
                     LastName = a.Doctor.LastName
-                }
+                },
+                CreatedAt = a.CreatedAt,
             };
         }
     }

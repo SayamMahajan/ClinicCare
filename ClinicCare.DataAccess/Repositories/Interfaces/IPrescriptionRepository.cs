@@ -1,11 +1,12 @@
 ﻿using ClinicCare.DataAccess.Models;
+using ClinicCare.Shared.DTOs.Pagination;
+using ClinicCare.Shared.DTOs.Prescription;
 
 namespace ClinicCare.DataAccess.Repositories.Interfaces
 {
-    public interface IPrescriptionRepository
+    public interface IPrescriptionRepository : IGenericRepository<Prescription>
     {
-        Task<Prescription?> GetByIdAsync(Guid id);
-        Task<IEnumerable<Prescription>> GetPrescriptionsForDoctorAsync(Guid doctorId);
-        Task<IEnumerable<Prescription>> GetPrescriptionsForPatientAsync(Guid patientId);
+        Task<PaginatedResult<Prescription>> GetAllAsync(PrescriptionSearchParams searchParams, Guid? patientId = null, Guid? doctorId = null);
+
     }
 }

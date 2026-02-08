@@ -6,6 +6,7 @@ using ClinicCare.Business.Utils;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.Enums;
 using System.Data;
 
@@ -13,22 +14,25 @@ namespace ClinicCare.Business.Services
 {
     public class EmployeeService : IEmployeeService
     {
-        private readonly IGenericRepository<Employee> _repo;
         private readonly IEmployeeRepository _employeeRepo;
-        private readonly IGenericRepository<DoctorSpecialization> _specializationRepo;
+        private readonly ISpecializationRepository _specializationRepo;
+        private readonly IPatientRepository _patientRepo;
+        private readonly IAppointmentRepository _appointmentRepo;
         private readonly IJwtTokenGenerator _jwt;
         private readonly ICurrentUser _currentUser;
 
         public EmployeeService(
-            IGenericRepository<Employee> repo,
             IEmployeeRepository employeeRepo,
-            IGenericRepository<DoctorSpecialization> specializationRepo,
+            ISpecializationRepository specializationRepo,
+            IPatientRepository patientRepo,
+            IAppointmentRepository appointmentRepo,
             IJwtTokenGenerator jwt,
             ICurrentUser currentUser)
         {
-            _repo = repo;
             _employeeRepo = employeeRepo;
             _specializationRepo = specializationRepo;
+            _patientRepo = patientRepo;
+            _appointmentRepo = appointmentRepo;
             _jwt = jwt;
             _currentUser = currentUser;
         }
@@ -39,8 +43,7 @@ namespace ClinicCare.Business.Services
 
             dto.Email = NormalizationHelper.NormalizeKey(dto.Email);
 
-            var employees = await _repo.FindAsync(e => dto.Email == e.Email);
-            var employee = employees.FirstOrDefault();
+            var employee = await _employeeRepo.GetByEmailAsync(dto.Email);
 
             if (employee is null || !PasswordHelper.Verify(dto.Password, employee.Password))
                 throw new UnauthorizedException("Invalid email or password");
@@ -60,6 +63,11 @@ namespace ClinicCare.Business.Services
 
         public async Task<Guid> RegisterAsync(EmployeeRegisterDto dto)
         {
+            ValidationHelper.ValidateAge(dto.DOB);
+
+            if (dto.Role is EmployeeRole.Admin)
+                throw new BadRequestException("Cannot register admin");
+
             ValidationHelper.NotNull(dto, "Employee data is required.");
 
             dto.Email = NormalizationHelper.NormalizeKey(dto.Email);
@@ -67,12 +75,9 @@ namespace ClinicCare.Business.Services
             dto.LastName = NormalizationHelper.NormalizeKey(dto.LastName);
             dto.Password = dto.Password.Trim();
 
-            ValidationHelper.DateNotInFuture(dto.DateOfJoining, nameof(dto.DateOfJoining));
+            var employeeExists = await _employeeRepo.GetByEmailAsync(dto.Email);
 
-            var exists = await _repo
-                .FindAsync(e => e.Email == dto.Email);
-
-            if (exists.Any())
+            if (employeeExists is not null)
                 throw new ConflictException("Email already registered");
 
             PasswordHelper.Validate(dto.Password);
@@ -85,8 +90,10 @@ namespace ClinicCare.Business.Services
                 LastName = dto.LastName,
                 Email = dto.Email,
                 Role = dto.Role,
-                DateOfJoining = dto.DateOfJoining,
-                Password = hashedPassword
+                Password = hashedPassword,
+                Gender = dto.Gender,
+                DOB = dto.DOB,
+                Phone = dto.Phone.Trim(),
             };
 
             if (dto.Role == EmployeeRole.Doctor)
@@ -103,9 +110,7 @@ namespace ClinicCare.Business.Services
 
                 ValidationHelper.DateNotInFuture(dto.DoctorDetails.FirstPracticeDate, nameof(dto.DoctorDetails.FirstPracticeDate));
 
-                ValidationHelper.ValidateAge(dto.DoctorDetails.DOB);
-
-                if (dto.DoctorDetails.FirstPracticeDate < dto.DoctorDetails.DOB.AddYears(18))
+                if (dto.DoctorDetails.FirstPracticeDate < dto.DOB.AddYears(18))
                     throw new BadRequestException("First practice date is unrealistically early.");
 
                 employee.DoctorDetails = new DoctorDetail
@@ -113,49 +118,66 @@ namespace ClinicCare.Business.Services
                     DoctorId = employee.Id,
                     SpecializationId = dto.DoctorDetails.SpecializationId,
                     Fee = dto.DoctorDetails.Fee,
-                    DOB = dto.DoctorDetails.DOB,
-                    Phone = dto.DoctorDetails.Phone.Trim(),
                     FirstPracticeDate = dto.DoctorDetails.FirstPracticeDate
                 };
             }
 
-            await _repo.InsertAsync(employee);
-            await _repo.SaveChangesAsync();
+            await _employeeRepo.InsertAsync(employee);
+            await _employeeRepo.SaveChangesAsync();
 
             return employee.Id;
         }
 
-        public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync(EmployeeRole? role)
+        public async Task<PaginatedResult<EmployeeResponseDto>> GetAllAsync(EmployeeSearchParams searchParams)
         {
-            IEnumerable<Employee> employees;
+            if(_currentUser.Role != UserRole.Admin)
+                throw new ForbiddenException("You are not authorized");
 
-            if (role is null)
-                employees = await _repo.GetAllAsync();
-            else if (role == EmployeeRole.Doctor)
-                employees = await _employeeRepo.GetDoctorsAsync(null);
-            else 
-                employees = await _repo.FindAsync(e => e.Role == role.Value);
-
-            return employees.Select(MapToDto);
+            var result = await _employeeRepo.GetAllAsync(searchParams);
+            return MapPaginatedResult(result);
         }
 
-        public async Task<IEnumerable<EmployeeResponseDto>> GetAllDoctorsAsync(Guid? specializationId)
+        public async Task<AdminDashboardResponse> GetAdminDashboardAsync()
         {
-            IEnumerable<Employee> employees = await _employeeRepo.GetDoctorsAsync(specializationId);
-            return employees.Select(MapToDto);
+            if (_currentUser.Role != UserRole.Admin)
+                throw new ForbiddenException("Admin access only");
+
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var monthStart = today.AddDays(1 - today.Day);
+
+            var apptTodayTask = _appointmentRepo.GetTodayCountAsync();
+            var apptMonthTask = _appointmentRepo.GetThisMonthCountAsync(monthStart);
+            var doctorsTask = _employeeRepo.GetTotalDoctorsCountAsync();
+            var patientsTodayTask = _patientRepo.GetTodayCountAsync();
+            var patientsMonthTask = _patientRepo.GetThisMonthCountAsync(monthStart);
+
+            await Task.WhenAll(apptTodayTask, apptMonthTask, doctorsTask, patientsTodayTask, patientsMonthTask);
+
+            return new AdminDashboardResponse
+            {
+                AppointmentsToday = await apptTodayTask,
+                AppointmentsThisMonth = await apptMonthTask, 
+                TotalDoctors = await doctorsTask,
+                NewPatientsToday = await patientsTodayTask,
+                NewPatientsThisMonth = await patientsMonthTask,
+            };
         }
+
 
         public async Task<EmployeeResponseDto> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var employee = await _repo.GetByIdAsync(id)
+            var employee = await _employeeRepo.GetByIdAsync(id)
                 ?? throw new NotFoundException("Employee not found");
 
-            if (_currentUser.Role != UserRole.Admin && (employee.Role == EmployeeRole.Admin))
+            if (_currentUser.Role != UserRole.Admin && employee.Role == EmployeeRole.Admin)
                 throw new ForbiddenException("You are not authorized");
 
-            return MapToDto(employee);
+            if (employee.Role == EmployeeRole.Doctor)
+                employee = await _employeeRepo.GetDoctorByIdAsync(id);
+
+            return MapToDto(employee!);
         }
 
         public async Task UpdateAsync(Guid id, EmployeeUpdateDto dto)
@@ -164,7 +186,7 @@ namespace ClinicCare.Business.Services
 
             ValidationHelper.NotNull(dto, "Employee data is required.");
 
-            var employee = await _repo.GetByIdAsync(id)
+            var employee = await _employeeRepo.GetByIdAsync(id)
                 ?? throw new NotFoundException("Employee not found");
 
             if (dto.FirstName is not null)
@@ -191,15 +213,18 @@ namespace ClinicCare.Business.Services
                     employee.DoctorDetails.Fee = dto.Fee!.Value;
 
                 if (dto.SpecializationId.HasValue)
-                    if (_specializationRepo.GetByIdAsync(dto.SpecializationId.Value) is null)
+                {
+                    var spec = await _specializationRepo.GetByIdAsync(dto.SpecializationId.Value);
+                    if (spec is null)
                         throw new BadRequestException($"Specialization with id {dto.SpecializationId} not found.");
-                    employee.DoctorDetails.SpecializationId = dto.SpecializationId!.Value;
+                    employee.DoctorDetails.SpecializationId = dto.SpecializationId.Value;
+                }
 
                 if (!string.IsNullOrWhiteSpace(dto.Phone))
-                    employee.DoctorDetails.Phone = dto.Phone.Trim();
+                    employee.Phone = dto.Phone.Trim();
             }
 
-            await _repo.SaveChangesAsync();
+            await _employeeRepo.SaveChangesAsync();
         }
 
 
@@ -207,11 +232,24 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var employee = await _repo.GetByIdAsync(id)
+            var employee = await _employeeRepo.GetByIdAsync(id)
                 ?? throw new NotFoundException("Employee not found");
 
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
+            await _employeeRepo.DeleteAsync(id);
+            await _employeeRepo.SaveChangesAsync();
+        }
+
+        private PaginatedResult<EmployeeResponseDto> MapPaginatedResult(PaginatedResult<Employee> result)
+        {
+            return new PaginatedResult<EmployeeResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
         }
 
         private static EmployeeResponseDto MapToDto(Employee e)
@@ -223,12 +261,13 @@ namespace ClinicCare.Business.Services
                 LastName = e.LastName,
                 Email = e.Email,
                 Role = e.Role,
-                DateOfJoining = e.DateOfJoining,
+                Gender = e.Gender,
+                Phone = e.Phone,
+                DOB = e.DOB,
+                CreatedAt = e.CreatedAt,
 
                 SpecializationId = e.DoctorDetails?.SpecializationId,
                 Fee = e.DoctorDetails?.Fee,
-                Phone = e.DoctorDetails?.Phone,
-                DOB = e.DoctorDetails?.DOB,
                 FirstPracticeDate = e.DoctorDetails?.FirstPracticeDate
             };
         }

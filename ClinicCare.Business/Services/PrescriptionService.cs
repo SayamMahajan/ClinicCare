@@ -5,6 +5,7 @@ using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Prescription;
 using ClinicCare.Shared.Enums;
@@ -14,41 +15,36 @@ namespace ClinicCare.Business.Services
 {
     public class PrescriptionService : IPrescriptionService
     {
-        private readonly IGenericRepository<Prescription> _repo;
         private readonly IPrescriptionRepository _prescriptionRepo;
-        private readonly IGenericRepository<Patient> _patientRepo;
-        private readonly IGenericRepository<Appointment> _appointmentRepo;
+        private readonly IPatientRepository _patientRepo;
+        private readonly IAppointmentRepository _appointmentRepo;
         private readonly ICurrentUser _currentUser;
 
         public PrescriptionService(
-            IGenericRepository<Prescription> repo,
             IPrescriptionRepository prescriptionRepo,
-            IGenericRepository<Patient> patientRepo,
-            IGenericRepository<Appointment> appointmentRepo,
+            IPatientRepository patientRepo,
+            IAppointmentRepository appointmentRepo,
             ICurrentUser currentUser
             )
         {
-            _repo = repo;
             _prescriptionRepo = prescriptionRepo;
             _patientRepo = patientRepo;
             _appointmentRepo = appointmentRepo;
             _currentUser = currentUser;
         }
-        public async Task<IEnumerable<PrescriptionResponseDto>> GetAllAsync()
+
+        public async Task<PaginatedResult<PrescriptionResponseDto>> GetAllAsync(PrescriptionSearchParams searchParams)
         {
-            IEnumerable<Prescription> prescriptions = [];
+            PaginatedResult<Prescription> result = _currentUser.Role switch
+            {
+                UserRole.Doctor => await _prescriptionRepo.GetAllAsync(searchParams, patientId: null, doctorId: _currentUser.UserId),
+                UserRole.Patient => await _prescriptionRepo.GetAllAsync(searchParams, patientId: _currentUser.UserId, doctorId: null),
+                _ => throw new ForbiddenException("Only doctors and patients can view prescriptions.")
+            };
 
-            if (_currentUser.Role == UserRole.Doctor)
-                prescriptions = await _prescriptionRepo.GetPrescriptionsForDoctorAsync(_currentUser.UserId);
-            else if (_currentUser.Role == UserRole.Patient)
-                prescriptions = await _prescriptionRepo.GetPrescriptionsForPatientAsync(_currentUser.UserId);
-            else
-                throw new ForbiddenException("You are not authorized.");
-
-            var dtos = new List<PrescriptionResponseDto>();
-
-            return prescriptions.Select(MapToDto);
+            return MapPaginatedResult(result);
         }
+
         public async Task<PrescriptionResponseDto?> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
@@ -69,7 +65,6 @@ namespace ClinicCare.Business.Services
         public async Task<Guid> CreateAsync(PrescriptionCreateDto dto)
         {
             ValidationHelper.NotNull(dto, "Prescription data is required.");
-
             ValidationHelper.GuidNotEmpty(dto.PatientId, "PatientId");
             ValidationHelper.GuidNotEmpty(dto.DoctorId, "DoctorId");
             ValidationHelper.GuidNotEmpty(dto.AppointmentId, "AppointmentId");
@@ -102,9 +97,9 @@ namespace ClinicCare.Business.Services
             };
 
 
-            await _repo.InsertAsync(prescription);
+            await _prescriptionRepo.InsertAsync(prescription);
             appointment.PrescriptionId = prescription.Id;
-            await _repo.SaveChangesAsync();
+            await _prescriptionRepo.SaveChangesAsync();
 
             return prescription.Id;
         }
@@ -114,6 +109,19 @@ namespace ClinicCare.Business.Services
             return JsonSerializer.Deserialize<List<MedicationDto>>(json)
                 ?? throw new BadRequestException(
                     "Invalid prescription data.");
+        }
+
+        private PaginatedResult<PrescriptionResponseDto> MapPaginatedResult(PaginatedResult<Prescription> result)
+        {
+            return new PaginatedResult<PrescriptionResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
         }
 
         private static PrescriptionResponseDto MapToDto(Prescription p)
@@ -133,7 +141,8 @@ namespace ClinicCare.Business.Services
                     FirstName = p.Doctor.FirstName,
                     LastName = p.Doctor.LastName
                 },
-                Description = Deserialize(p.Description)
+                Description = Deserialize(p.Description),
+                CreatedAt = p.CreatedAt,
             };
         }
     }

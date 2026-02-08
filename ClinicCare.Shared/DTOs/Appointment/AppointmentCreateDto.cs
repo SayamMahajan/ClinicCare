@@ -12,7 +12,9 @@ namespace ClinicCare.Shared.DTOs.Appointment
         public Guid DoctorId { get; set; }
 
         [Required]
-        public DateTime Date { get; set; }
+        public DateOnly Date { get; set; }
+
+        public Guid PaymentId { get; set; }
 
         [Required]
         [EnumDataType(typeof(TimeSlotType))]

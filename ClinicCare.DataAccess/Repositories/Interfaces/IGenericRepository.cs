@@ -1,15 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using ClinicCare.Shared.DTOs.Pagination;
 
 namespace ClinicCare.DataAccess.Repositories.Interfaces
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<IEnumerable<T>> GetAllAsync();
-        Task<T?> GetByIdAsync(object id);
-        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+        Task<PaginatedResult<T>> GetAllAsync(PaginationParams pageParams);
+        Task<T?> GetByIdAsync(Guid id);
         Task InsertAsync(T entity);
         void Update(T entity);
-        Task DeleteAsync(object id);
+        Task DeleteAsync(Guid id);
         Task SaveChangesAsync();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ClinicCare.Api.Middlewares;
 using ClinicCare.Business.Services.Interfaces;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Specialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,17 +20,17 @@ namespace ClinicCare.Api.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<SpecializationResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginatedResult<SpecializationResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAllAsync([FromQuery] PaginationParams pagination)
         {
-            var payments = await _specializationService.GetAllAsync();
+            var payments = await _specializationService.GetAllAsync(pagination);
             return Ok(payments);
         }
 
         [HttpGet("{id}", Name = "GetSpecializationById")]
-        [ProducesResponseType(typeof(IEnumerable<SpecializationResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(SpecializationResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]

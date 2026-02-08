@@ -5,6 +5,7 @@ using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.DTOs.Employee;
+using ClinicCare.Shared.DTOs.Pagination;
 using ClinicCare.Shared.DTOs.Patient;
 using ClinicCare.Shared.DTOs.Payment;
 using ClinicCare.Shared.Enums;
@@ -15,33 +16,30 @@ namespace ClinicCare.Business.Services
 {
     public class PaymentService : IPaymentService
     {
-        private readonly IGenericRepository<Payment> _repo;
         private readonly IPaymentRepository _paymentRepo;
         private readonly ICurrentUser _currentUser;
 
         public PaymentService(
-            IGenericRepository<Payment> repo,
-            IPaymentRepository paymenttRepo,
+            IPaymentRepository paymentRepo,
             ICurrentUser currentUser)
         {
-            _repo = repo;
-            _paymentRepo = paymenttRepo;
+            _paymentRepo = paymentRepo;
             _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<PaymentResponseDto>> GetAllAsync()
+        public async Task<PaginatedResult<PaymentResponseDto>> GetAllAsync(PaymentSearchParams searchParams)
         {
-            IEnumerable<Payment> payments = _currentUser.Role switch
+            PaginatedResult<Payment> result = _currentUser.Role switch
             {
-                UserRole.Admin => await _paymentRepo.GetAllAsync(),
-                UserRole.Doctor => await _paymentRepo.GetPaymentsForDoctorAsync(_currentUser.UserId),
-                UserRole.Patient => await _paymentRepo.GetPaymentsForPatientAsync(_currentUser.UserId),
+                UserRole.Admin => await _paymentRepo.GetAllAsync(searchParams),
+                UserRole.Doctor => await _paymentRepo.GetAllAsync(searchParams, patientId: null, doctorId: _currentUser.UserId),
+                UserRole.Patient => await _paymentRepo.GetAllAsync(searchParams, patientId: _currentUser.UserId, doctorId: null),
                 _ => throw new ForbiddenException("Invalid role")
             };
 
-            return payments.Select(MapToDto);
+            return MapPaginatedResult(result);
         }
-           
+
         public async Task<PaymentResponseDto?> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
@@ -50,23 +48,26 @@ namespace ClinicCare.Business.Services
             if (payment is null)
                 throw new NotFoundException($"Payment with id {id} not found.");
 
-            if(_currentUser.Role == UserRole.Patient && _currentUser.UserId != payment.SenderId)
+            if(_currentUser.Role == UserRole.Patient && _currentUser.UserId != payment.PatientId)
                 throw new ForbiddenException("You are not authorized");
 
-            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != payment.RecipientId)
+            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != payment.DoctorId)
                 throw new ForbiddenException("You are not authorized");
 
             return MapToDto(payment);
         }
         
-        public async Task<Guid> CreateAsync(PaymentCreateDto dto)
+        public async Task<Guid> CreateAsync(PaymentCreateDto dto, PaymentType paymentType = PaymentType.Paid)
         {
             ValidationHelper.NotNull(dto, "Payment data is required.");
 
-            if (dto.SenderId != _currentUser.UserId)
-                throw new ForbiddenException("Sender does not match logged-in user.");
+            if(paymentType == PaymentType.Paid)
+            {
+                if (dto.PatientId != _currentUser.UserId)
+                    throw new ForbiddenException("Sender does not match logged-in user.");
+            }
 
-            if (dto.SenderId == dto.RecipientId)
+            if (dto.PatientId == dto.DoctorId)
                 throw new ValidationException("Sender and recipient cannot be the same.");
 
             if (dto.Amount <= 0)
@@ -78,15 +79,48 @@ namespace ClinicCare.Business.Services
             var payment = new Payment
             {
                 Id = Guid.NewGuid(),
+                TransactionId = PaymentHelper.GenerateTransactionId(),
                 Amount = dto.Amount,
-                RecipientId = dto.RecipientId,
-                SenderId = dto.SenderId,
+                PatientId = dto.PatientId,
+                DoctorId = dto.DoctorId,
+                Type = paymentType,
             };
 
-            await _repo.InsertAsync(payment);
-            await _repo.SaveChangesAsync();
+            await _paymentRepo.InsertAsync(payment);
+            await _paymentRepo.SaveChangesAsync();
 
             return payment.Id;
+        }
+
+        public async Task ProcessCancellationRefundAsync(Appointment appointment)
+        {
+            var payment = await _paymentRepo.GetByIdAsync(appointment.PaymentId);
+
+            if (payment is null)
+                throw new BadRequestException($"No payment found for cancelled appointment {appointment.Id}");
+
+            var paymentCreatedDto = new PaymentCreateDto
+            {
+                Amount = payment.Amount,
+                PatientId = payment.PatientId,
+                DoctorId = payment.DoctorId,
+            };
+
+            await CreateAsync(paymentCreatedDto, PaymentType.Refund);
+            await _paymentRepo.SaveChangesAsync();
+        }
+
+        private PaginatedResult<PaymentResponseDto> MapPaginatedResult(PaginatedResult<Payment> result)
+        {
+            return new PaginatedResult<PaymentResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
         }
 
         private static PaymentResponseDto MapToDto(Payment p)
@@ -97,16 +131,17 @@ namespace ClinicCare.Business.Services
                 Amount = p.Amount,
                 Patient = new PatientMiniDto
                 {
-                    Id = p.Sender.Id,
-                    FirstName = p.Sender.FirstName,
-                    LastName = p.Sender.LastName
+                    Id = p.PatientId,
+                    FirstName = p.Patient.FirstName,
+                    LastName = p.Patient.LastName
                 },
                 Doctor = new DoctorMiniDto
                 {
-                    Id = p.Recipient.Id,
-                    FirstName = p.Recipient.FirstName,
-                    LastName = p.Recipient.LastName
+                    Id = p.DoctorId,
+                    FirstName = p.Doctor.FirstName,
+                    LastName = p.Doctor.LastName
                 },
+                Type = p.Type,
                 CreatedAt = p.CreatedAt,
             };
         }

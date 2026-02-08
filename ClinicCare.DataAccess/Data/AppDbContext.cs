@@ -13,11 +13,47 @@ namespace ClinicCare.DataAccess.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Payment> Payments { get; set; }
-        public DbSet<DoctorSpecialization> DoctorSpecializations { get; set; }
+        public DbSet<Specialization> Specializations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Payment)
+                .WithMany()
+                .HasForeignKey(a => a.PaymentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Appointment>()
+                .HasOne(a => a.Prescription)
+                .WithMany()
+                .HasForeignKey(a => a.PrescriptionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Patient)
+                .WithMany()
+                .HasForeignKey(p => p.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Doctor)
+                .WithMany()
+                .HasForeignKey(p => p.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Prescription>()
+                .HasOne(p => p.Patient)
+                .WithMany()
+                .HasForeignKey(p => p.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Prescription>()
+                .HasOne(p => p.Doctor)
+                .WithMany()
+                .HasForeignKey(p => p.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Employee>()
                 .HasIndex(e => e.Email)
@@ -25,6 +61,10 @@ namespace ClinicCare.DataAccess.Data
 
             modelBuilder.Entity<Patient>()
                 .HasIndex(p => p.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Payment>()
+                .HasIndex(e => e.TransactionId)
                 .IsUnique();
         }
     }

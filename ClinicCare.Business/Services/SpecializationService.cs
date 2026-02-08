@@ -4,31 +4,35 @@ using ClinicCare.Business.Interfaces;
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.DataAccess.Models;
 using ClinicCare.DataAccess.Repositories.Interfaces;
+using ClinicCare.Shared.DTOs.Pagination;
+using ClinicCare.Shared.DTOs.Prescription;
 using ClinicCare.Shared.DTOs.Specialization;
+using ClinicCare.Shared.Enums;
 
 namespace ClinicCare.Business.Services
 {
     public class SpecializationService : ISpecializationService
     {
-        private readonly IGenericRepository<DoctorSpecialization> _repo;
+        private readonly ISpecializationRepository _specializationRepo;
+        private readonly ICurrentUser _currentUser;
 
-        public SpecializationService(IGenericRepository<DoctorSpecialization> repo, ICurrentUser currentUser)
+        public SpecializationService(ISpecializationRepository specializationRepo, ICurrentUser currentUser)
         {
-            _repo = repo;
+            _specializationRepo = specializationRepo;
+            _currentUser = currentUser;
         }
 
-        public async Task<IEnumerable<SpecializationResponseDto>> GetAllAsync()
+        public async Task<PaginatedResult<SpecializationResponseDto>> GetAllAsync(PaginationParams pagination)
         {
-            var specializations = await _repo.GetAllAsync();
-
-            return specializations.Select(MapToDto);
+            var result = await _specializationRepo.GetAllAsync(pagination);
+            return MapPaginatedResult(result);
         }
 
         public async Task<SpecializationResponseDto?> GetByIdAsync(Guid id)
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var specialization = await _repo.GetByIdAsync(id);
+            var specialization = await _specializationRepo.GetByIdAsync(id);
             if (specialization is null)
                 throw new NotFoundException($"Specialization with id {id} not found.");
 
@@ -43,22 +47,24 @@ namespace ClinicCare.Business.Services
 
             ValidationHelper.NotEmpty(dto.Type, "Specialization type is required.");
 
-            var exists = await _repo.FindAsync(s =>
-                s.Type == dto.Type);
+            if (_currentUser.Role != UserRole.Admin)
+                throw new ForbiddenException("Only admins can create specializations");
+
+            var exists = await _specializationRepo.GetByTypeAsync(dto.Type);
 
             ValidationHelper.MustBeUnique(
-                exists.Any(),
+                exists is not null,
                 $"Specialization '{dto.Type}' already exists.");
 
-            var specialization = new DoctorSpecialization
+            var specialization = new Specialization
             {
                 Id = Guid.NewGuid(),
                 Type = dto.Type,
             };
 
 
-            await _repo.InsertAsync(specialization);
-            await _repo.SaveChangesAsync();
+            await _specializationRepo.InsertAsync(specialization);
+            await _specializationRepo.SaveChangesAsync();
 
             return specialization.Id;
         }
@@ -67,15 +73,31 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var specialization = await _repo.GetByIdAsync(id);
+            if (_currentUser.Role != UserRole.Admin)
+                throw new ForbiddenException("Only admins can create specializations");
+
+            var specialization = await _specializationRepo.GetByIdAsync(id);
             if (specialization is null)
                 throw new NotFoundException($"Specialization with id {id} not found.");
 
-            await _repo.DeleteAsync(id);
-            await _repo.SaveChangesAsync();
+            await _specializationRepo.DeleteAsync(id);
+            await _specializationRepo.SaveChangesAsync();
         }
 
-        private static SpecializationResponseDto MapToDto(DoctorSpecialization s)
+        private PaginatedResult<SpecializationResponseDto> MapPaginatedResult(PaginatedResult<Specialization> result)
+        {
+            return new PaginatedResult<SpecializationResponseDto>
+            {
+                Items = result.Items.Select(MapToDto).ToList(),
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                TotalPages = result.TotalPages,
+                HasPreviousPage = result.HasPreviousPage,
+                HasNextPage = result.HasNextPage
+            };
+        }
+
+        private static SpecializationResponseDto MapToDto(Specialization s)
         {
             return new SpecializationResponseDto
             {

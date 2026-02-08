@@ -10,9 +10,10 @@ namespace ClinicCare.Shared.DTOs.Payment
         public decimal Amount { get; set; }
 
         [Required]
-        public Guid RecipientId { get; set; }
+        public Guid PatientId { get; set; }
 
         [Required]
-        public Guid SenderId { get; set; }
+        public Guid DoctorId { get; set; }
     }
+
 }

@@ -25,14 +25,23 @@ namespace ClinicCare.DataAccess.Models
         public string Email { get; set; }
 
         [Required]
-        public DateTime DateOfJoining { get; set; }
-
-        [Required]
         [MinLength(8)]
         [MaxLength(100)]
         public string Password { get; set; }
 
-        // Navigation properties
+        [Required]
+        public DateOnly DOB { get; set; }
+
+        [Required]
+        public Gender Gender { get; set; }
+
+        [Required]
+        [Phone]
+        [MaxLength(15)]
+        public string Phone { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
         public DoctorDetail? DoctorDetails { get; set; }
         public ICollection<Appointment> Appointments { get; set; } = [];
         public ICollection<Payment> PaymentsReceived { get; set; } = [];

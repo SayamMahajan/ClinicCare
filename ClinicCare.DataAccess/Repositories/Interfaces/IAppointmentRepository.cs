@@ -1,12 +1,20 @@
 ﻿using ClinicCare.DataAccess.Models;
+using ClinicCare.Shared.DTOs.Pagination;
+using ClinicCare.Shared.Enums;
 
 namespace ClinicCare.DataAccess.Repositories.Interfaces
 {
-    public interface IAppointmentRepository
+    public interface IAppointmentRepository : IGenericRepository<Appointment>
     {
-        Task<IEnumerable<Appointment>> GetAllWithDetailsAsync();
-        Task<Appointment?> GetByIdWithDetailsAsync(Guid id);
-        Task<IEnumerable<Appointment>> GetByDoctorIdAsync(Guid doctorId);
-        Task<IEnumerable<Appointment>> GetByPatientIdAsync(Guid patientId);
+        Task<PaginatedResult<Appointment>> GetAllAsync(AppointmentSearchParams searchParams, Guid? patientId, Guid? doctorId);
+
+        Task<int> GetTodayCountAsync();
+
+        Task<int> GetThisMonthCountAsync(DateOnly monthStart);
+
+        Task<IEnumerable<Appointment>> GetPatientAppointmentsForConflictCheckAsync(
+            Guid patientId, 
+            DateOnly date, 
+            TimeSlotType timeSlot);
     }
 }

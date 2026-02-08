@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace ClinicCare.Business.Helpers
 {
-    public static class PasswordHelper
+    internal static class PasswordHelper
     {
         private static readonly Regex StrongPassword =
             new(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,100}$");

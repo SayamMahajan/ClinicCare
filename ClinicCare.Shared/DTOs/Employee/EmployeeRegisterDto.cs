@@ -27,12 +27,18 @@ namespace ClinicCare.Shared.DTOs.Employee
         )]
         public string Password { get; set; }
 
-        [Required]
-        public DateTime DateOfJoining { get; set; }
 
         [Required]
         [EnumDataType(typeof(EmployeeRole))]
         public EmployeeRole Role { get; set; }
+
+        public DateOnly DOB { get; set; }
+
+        public Gender Gender { get; set; }
+
+        [Phone]
+        [MaxLength(15)]
+        public string Phone { get; set; }
 
         // Doctor-only
         public DoctorRegisterDetailsDto? DoctorDetails { get; set; }
