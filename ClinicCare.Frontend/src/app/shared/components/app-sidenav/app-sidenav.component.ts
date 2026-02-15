@@ -1,14 +1,14 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 
 type Role = 'Admin' | 'Doctor' | 'Patient';
 
 @Component({
   selector: 'app-sidenav',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule],
+  imports: [RouterModule, MaterialModule],
   templateUrl: './app-sidenav.component.html'
 })
 export class AppSidenavComponent {
@@ -59,7 +59,7 @@ export class AppSidenavComponent {
       },
       {
         label: 'Prescriptions',
-        route: '/prescriptions',
+        link: '/prescriptions',
       }
     ],
 
@@ -79,7 +79,7 @@ export class AppSidenavComponent {
       },
       {
         label: 'Prescriptions',
-        route: '/prescriptions',
+        link: '/prescriptions',
       }
     ]
   };

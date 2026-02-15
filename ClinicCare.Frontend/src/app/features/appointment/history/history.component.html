@@ -1,47 +1,50 @@
 <div class="container-fluid p-4">
-
   <app-list-filter-bar
-    searchLabel="Search"
-    [options]="['Past Day', 'Past Week', 'Past Month']"
-    label="Time Range"
-    (searchChange)="search.set($event)"
-    (optionChange)="onRangeChange($event)"
+    [searchLabel]="role() === 'Doctor' ? 'Search patient' : 'Search doctor'"
+    [options]="['All', 'Completed', 'Cancelled']"
+    label="Status"
+    (searchChange)="onSearchChange($event)"
+    (optionChange)="onStatusChange($event)"
   />
 
-  <div class="row mb-4 align-items-center">
+  <app-dropdown-filter
+    [options]="['All', 'Morning', 'Earlynoon', 'Latenoon', 'Evening', 'Night']"
+    label="Time Slot"
+    (valueChange)="onSlotChange($event)"
+  />
 
-    <div class="col-md-3">
-      <app-dropdown-filter
-        [options]="['Morning', 'EarlyNoon', 'LateNoon', 'Evening', 'Night']"
-        label="Time Slot"
-        (valueChange)="onSlotChange($event)"
-      />
+  @if (loading()) {
+    <div class="text-center p-4">
+      <mat-spinner diameter="50"></mat-spinner>
     </div>
+  }
 
-    <div class="col-md-9 text-end">
-      <app-dropdown-filter
-        [options]="['All', 'Completed', 'Cancelled']"
-        label="Status"
-        (valueChange)="onStatusChange($event)"
-      />
-    </div>
+  @if (!loading()) {
+    <app-list-container [columns]="columns()">
+      @for (apt of filteredAppointments(); track apt.id) {
+        <app-list-row
+          [values]="[getUserName(apt), apt.date, getSlotLabel(apt.timeSlot), apt.status]"
+          (infoClick)="onInfo(apt.id)"
+        />
+      }
 
-  </div>
+      @if (filteredAppointments().length === 0) {
+        <div class="text-center p-4 text-muted">
+          <p>No appointment history found</p>
+        </div>
+      }
+    </app-list-container>
 
-  <app-list-container [columns]="columns()">
-
-    @for (apt of filteredAppointments(); track apt.id) {
-      <app-list-row
-        [values]="[
-          getUserName(apt),
-          apt.date,
-          getSlotLabel(apt.timeSlot),
-          apt.status
-        ]"
-        (infoClick)="onInfo(apt.id)"
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [hasPrevious]="hasPrevious()"
+        [hasNext]="hasNext()"
+        [pageSize]="pageSize()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
       />
     }
-
-  </app-list-container>
-
+  }
 </div>

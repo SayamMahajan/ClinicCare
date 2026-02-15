@@ -1,10 +1,10 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '../../../shared/ui/material.module';
-import { Employee, EmployeeDialogAction } from '../../models/employee.model';
+import { EmployeeResponseDto, EmployeeDialogAction } from '../../models/employee.model';
 
 export interface EmployeeDetailsDialogData {
-  employee: Employee;
+  employee: EmployeeResponseDto;
 }
 
 @Component({

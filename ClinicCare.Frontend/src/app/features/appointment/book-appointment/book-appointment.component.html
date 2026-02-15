@@ -1,86 +1,242 @@
 <div class="container-fluid p-4">
-  <app-list-filter-bar
-    searchLabel="Search"
-    [options]="specializations()"
-    label="Specialization"
-    (searchChange)="search.set($event)"
-    (optionChange)="selectedSpecialization.set($event)"
-  />
+  <div class="mb-4">
+    <h2 class="mb-1">Book an Appointment</h2>
+    <p class="text-muted">Select a doctor, date, and time slot to book your appointment</p>
+  </div>
 
-  <h4 class="m-2">Select Doctor</h4>
+  <mat-card class="mb-4">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="me-2">person_search</mat-icon>
+        Step 1: Select a Doctor
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="mt-3">
+      <app-list-filter-bar
+        searchLabel="Search doctors by name"
+        (searchChange)="onSearchChange($event)"
+        [options]="['Next Day', 'Next Week', 'Next Month']"
+        label="Time Range"
+        
+      />
 
-  <mat-card class="mt-3">
-    <mat-card-content
-      class="overflow-auto"
-      style="max-height: 250px;"
-    >
+      <app-dropdown-filter
+        [options]="specializationOptions()"
+        label="Specialization"
+        (valueChange)="onSpecializationChange($event)"
+      />
 
-      <app-list-container
-        [columns]="['Doctor', 'Specialization', 'Experience', 'Fee', 'Phone', 'Action']"
-      >
-        @for (doc of filteredDoctors(); track doc.id) {
-        <app-list-row
-          [values]="[
-            doc.firstName + ' ' + doc.lastName,
-            getSpecializationName(doc.specializationId),
-            getExperienceYears(doc.dateOfJoining),
-            doc.fee ? '₹' + doc.fee : '-',
-            doc.phone
-          ]"
-          actionType="select"
-          [selected]="isSelected(doc)"
-          [disabled]="!!selectedDoctor() && !isSelected(doc)"
-          (selectClick)="toggleDoctor(doc)"
-        />
-        }
-      </app-list-container>
+      @if (loadingDoctors()) {
+        <div class="text-center p-4">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="text-muted mt-2">Loading doctors...</p>
+        </div>
+      }
+      @if (!loadingDoctors()) {
+        <div class="row mt-3">
+          @for (doctor of doctors(); track doctor.id) {
+            <div class="col-md-6 col-lg-4 mb-3">
+              <mat-card
+                class="doctor-card h-100"
+                [class.selected]="isSelected(doctor)"
+                (click)="toggleDoctor(doctor)"
+              >
+                <mat-card-content>
+                  <div class="d-flex align-items-start">
+                    <mat-icon class="me-3" color="primary">account_circle</mat-icon>
+                    <div class="flex-grow-1">
+                      <h5 class="mb-1">Dr. {{ doctor.firstName }} {{ doctor.lastName }}</h5>
+                      <p class="text-muted mb-1">
+                        <small>{{ getSpecializationName(doctor.specializationId) }}</small>
+                      </p>
+                      <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge bg-light text-dark">
+                          {{ getExperienceYears(doctor.firstPracticeDate) }} exp
+                        </span>
+                        @if (doctor.fee) {
+                          <span class="text-primary fw-bold">${{ doctor.fee }}</span>
+                        }
+                      </div>
+                    </div>
+                    @if (isSelected(doctor)) {
+                      <mat-icon color="primary">check_circle</mat-icon>
+                    }
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          }
 
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="mt-4">
-    <mat-card-content>
-
-      <h5 class="mb-3">Appointment Details</h5>
-
-      <div class="row g-3">
-
-        <div class="col-md-4">
-          <mat-form-field appearance="outline" class="w-100">
-            <mat-label>Date</mat-label>
-            <input
-              matInput
-              [matDatepicker]="picker"
-              (dateChange)="selectedDate.set($event.value)"
-            />
-            <mat-datepicker-toggle matSuffix [for]="picker" />
-            <mat-datepicker #picker />
-          </mat-form-field>
+          @if (doctors().length === 0) {
+            <div class="col-12">
+              <div class="text-center p-5">
+                <mat-icon class="text-muted" style="font-size: 64px; width: 64px; height: 64px"
+                  >person_search</mat-icon
+                >
+                <h4 class="text-muted mt-3">No doctors found</h4>
+                <p class="text-muted">Try adjusting your search or filter</p>
+              </div>
+            </div>
+          }
         </div>
 
-        <div class="col-md-4">
-          <app-dropdown-filter
-            label="Time Slot"
-            [options]="['Morning', 'EarlyNoon', 'LateNoon', 'Evening', 'Night']"
-            (valueChange)="onSlotChange($event)"
+        @if (totalPages() > 1) {
+          <app-pagination
+            [currentPage]="currentPage()"
+            [totalPages]="totalPages()"
+            [hasPrevious]="hasPrevious()"
+            [hasNext]="hasNext()"
+            [pageSize]="pageSize()"
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)"
           />
-        </div>
-
-        <div class="col-md-4 d-flex align-items-end">
-          <button
-            mat-raised-button
-            color="primary"
-            class="w-100"
-            [disabled]="!selectedDoctor() || !selectedDate() || !selectedSlot()"
-            (click)="submit()"
-          >
-            Book Appointment
-          </button>
-        </div>
-
-      </div>
-
+        }
+      }
     </mat-card-content>
   </mat-card>
 
+  <mat-card class="mb-4">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="me-2">calendar_today</mat-icon>
+        Step 2: Select Date
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="mt-3">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Appointment Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [min]="minDate"
+          [value]="selectedDate()"
+          (dateChange)="onDateChange($event)"
+          placeholder="Choose a date"
+          readonly
+        />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+        <mat-hint>Select a date for your appointment</mat-hint>
+      </mat-form-field>
+
+      @if (selectedDate()) {
+        <div class="alert alert-success d-flex align-items-center">
+          <mat-icon class="me-2">check_circle</mat-icon>
+          <span>Date selected: {{ selectedDate()!.toDateString() }}</span>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Step 3: Select Time Slot -->
+  <mat-card class="mb-4">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="me-2">schedule</mat-icon>
+        Step 3: Select Time Slot
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content class="mt-3">
+      <app-dropdown-filter
+        [options]="['Morning', 'Earlynoon', 'Latenoon', 'Evening', 'Night']"
+        label="Time Slot"
+        (valueChange)="onSlotChange($event)"
+      />
+
+      @if (selectedSlot()) {
+        <div class="alert alert-success d-flex align-items-center mt-3">
+          <mat-icon class="me-2">check_circle</mat-icon>
+          <span>Time slot selected: {{ selectedSlot() }}</span>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Summary -->
+  @if (selectedDoctor() || selectedDate() || selectedSlot()) {
+    <mat-card class="mb-4">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="me-2">summarize</mat-icon>
+          Appointment Summary
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="mt-3">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-muted">Doctor</h6>
+            @if (selectedDoctor()) {
+              <p class="mb-3">
+                Dr. {{ selectedDoctor()!.firstName }} {{ selectedDoctor()!.lastName }}
+                <br />
+                <small class="text-muted">{{
+                  getSpecializationName(selectedDoctor()!.specializationId)
+                }}</small>
+              </p>
+            } @else {
+              <p class="text-muted">Not selected</p>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <h6 class="text-muted">Date & Time</h6>
+            @if (selectedDate() && selectedSlot()) {
+              <p class="mb-3">
+                {{ selectedDate()!.toDateString() }}
+                <br />
+                <small class="text-muted">{{ selectedSlot() }}</small>
+              </p>
+            } @else {
+              <p class="text-muted">Not selected</p>
+            }
+          </div>
+        </div>
+
+        @if (selectedDoctor()?.fee) {
+          <div class="alert alert-info mt-3">
+            <strong>Consultation Fee:</strong> ${{ selectedDoctor()!.fee }}
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Action Buttons -->
+  <div class="d-flex justify-content-end gap-2">
+    <button mat-stroked-button routerLink="/appointments" [disabled]="submitting()">
+      <mat-icon>cancel</mat-icon>
+      Cancel
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="submit()"
+      [disabled]="!canSubmit() || submitting()"
+    >
+      @if (submitting()) {
+        <mat-spinner diameter="20" class="d-inline-block me-2"></mat-spinner>
+        Booking...
+      } @else {
+        Book Appointment
+      }
+    </button>
+  </div>
 </div>
+
+<!-- Styles -->
+<style>
+  .doctor-card {
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+  }
+
+  .doctor-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .doctor-card.selected {
+    border: 2px solid var(--mat-primary);
+    background-color: rgba(var(--mat-primary-rgb), 0.05);
+  }
+</style>

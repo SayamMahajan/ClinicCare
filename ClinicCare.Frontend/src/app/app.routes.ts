@@ -33,6 +33,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'prescriptions',
+    loadChildren: () =>
+      import('./features/prescription/prescription.routes').then((m) => m.PRESCRIPTIONS_ROUTES),
+    canActivate: [authGuard],
+  },
+  {
     path: 'appointments',
     loadChildren: () =>
       import('./features/appointment/appointment.routes').then((m) => m.APPOINTMENTS_ROUTES),

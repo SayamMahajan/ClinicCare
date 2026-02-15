@@ -1,27 +1,30 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../../shared/ui/material.module';
 import { ListFilterBarComponent } from '../../../shared/components/list-filter-bar/list-filter-bar.component';
 import { ListContainerComponent } from '../../../shared/components/list-container/list-container.component';
 import { ListRowComponent } from '../../../shared/components/list-row/list-row.component';
-import { EmployeeService } from '../../../shared/services/employee.service';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { DropdownFilterComponent } from '../../../shared/components/dropdown-filter/dropdown-filter.component';
 import { Subject, takeUntil } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { EmployeeDetailsDialogComponent } from '../../../shared/components/employee-details-dialog/employee-details-dialog.component';
 import { Router } from '@angular/router';
-import { Employee } from '../../../shared/models/employee.model';
+import { EmployeeResponseDto, Gender } from '../../../shared/models/employee.model';
+import { EmployeeService } from '../../../services/employee.service';
+import { EmployeeSearchParams } from '../../../shared/models/pagination.model';
 
-type Role = 'Admin' | 'Doctor';
-type RoleFilter = 'All' | Role;
+type RoleFilter = 'Doctor';
+type GenderFilter = 'All' | Gender;
 
 @Component({
   selector: 'app-manage-employees',
   imports: [
-    CommonModule,
     MaterialModule,
     ListFilterBarComponent,
     ListContainerComponent,
     ListRowComponent,
+    PaginationComponent,
+    DropdownFilterComponent,
   ],
   templateUrl: './manage-employees.component.html',
 })
@@ -31,11 +34,18 @@ export class ManageEmployeesComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private destroy$ = new Subject<void>();
 
-  employees = signal<Employee[]>([]);
+  employees = signal<EmployeeResponseDto[]>([]);
+  loading = signal(false);
 
-  loading = false;
-  search = '';
-  selectedRole: RoleFilter = 'All';
+  search = signal('');
+  selectedRole = signal<RoleFilter>('Doctor');
+  selectedGender = signal<GenderFilter>('All');
+
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalPages = signal(0);
+  hasPrevious = signal(false);
+  hasNext = signal(false);
 
   ngOnInit() {
     this.loadEmployees();
@@ -46,47 +56,74 @@ export class ManageEmployeesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadEmployees(role?: RoleFilter) {
-    this.loading = true;
-    const apiRole = role === 'All' ? undefined : role;
+  loadEmployees() {
+    this.loading.set(true);
+
+    const role =  this.selectedRole();
+    const genderFilter = this.selectedGender();
+
+    const params: EmployeeSearchParams = {
+      pageNumber: this.currentPage(),
+      pageSize: this.pageSize(),
+      searchTerm: this.search() || undefined,
+      role,
+      gender: genderFilter === 'All' ? undefined : genderFilter,
+    };
 
     this.employeeService
-      .getEmployees(apiRole)
+      .getAll(params)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data: Employee[]) => {
-          this.employees.set(data);
-          this.loading = false;
+        next: (result) => {
+          this.employees.set(result.items);
+          this.totalPages.set(result.totalPages);
+          this.hasPrevious.set(result.hasPreviousPage);
+          this.hasNext.set(result.hasNextPage);
+          this.loading.set(false);
         },
         error: (err) => {
-          console.error('Error:', err);
+          console.error('Failed to load employees:', err);
           this.employees.set([]);
-          this.loading = false;
+          this.loading.set(false);
         },
       });
   }
 
+  columns = computed(() => ['Name', 'Email', 'Role', 'Phone', 'Gender', 'Action']);
+
   onRoleChange(value: string) {
-    this.selectedRole = value as RoleFilter;
-    this.loadEmployees(this.selectedRole);
+    this.selectedRole.set(value as RoleFilter);
+    this.currentPage.set(1);
+    this.loadEmployees();
+  }
+
+  onGenderChange(value: string) {
+    this.selectedGender.set(value as 'All' | 'Male' | 'Female' | 'Others');
+    this.currentPage.set(1);
+    this.loadEmployees();
   }
 
   onSearchChange(value: string) {
-    this.search = value;
+    this.search.set(value);
+    this.currentPage.set(1); 
+    this.loadEmployees();
   }
 
-  filteredEmployees(): Employee[] {
-    return this.employees().filter((emp: Employee) => {
-      const matchesSearch = `${emp.firstName} ${emp.lastName} ${emp.email}`
-        .toLowerCase()
-        .includes(this.search.toLowerCase());
-
-      const matchesRole = this.selectedRole === 'All' || emp.role === this.selectedRole;
-
-      return matchesSearch && matchesRole;
-    });
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadEmployees();
   }
-  onInfo(employee: Employee) {
+
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1); 
+    this.loadEmployees();
+  }
+
+  onInfo(id: string) {
+    const employee = this.employees().find((e) => e.id === id);
+    if (!employee) return;
+
     this.dialog
       .open(EmployeeDetailsDialogComponent, {
         width: '450px',
@@ -107,13 +144,23 @@ export class ManageEmployeesComponent implements OnInit, OnDestroy {
       });
   }
 
-  updateEmployee(employee: Employee) {
+  updateEmployee(employee: EmployeeResponseDto) {
     this.router.navigate(['/employees/edit', employee.id]);
   }
 
   deleteEmployee(id: string) {
     this.employeeService.delete(id).subscribe(() => {
-      this.loadEmployees(this.selectedRole);
+      this.loadEmployees();
     });
+  }
+
+  mapRow(employee: EmployeeResponseDto): string[] {
+    return [
+      `${employee.firstName} ${employee.lastName}`,
+      employee.email,
+      employee.role,
+      employee.phone,
+      employee.gender,
+    ];
   }
 }

@@ -1,16 +1,16 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
 import { MaterialModule } from '../../ui/material.module';
-import { Payment } from '../../models/payment.model';
+import { PaymentResponseDto } from '../../models/payment.model';
+import { DatePipe } from '@angular/common';
 
 export interface PaymentDetailsDialogData {
-  payment: Payment;
+  payment: PaymentResponseDto;
 }
 
 @Component({
   selector: 'payment-details-dialog',
-  imports: [CommonModule, MaterialModule],
+  imports: [MaterialModule, DatePipe],
   templateUrl: './payment-details-dialog.component.html'
 })
 export class PaymentDetailsDialogComponent {

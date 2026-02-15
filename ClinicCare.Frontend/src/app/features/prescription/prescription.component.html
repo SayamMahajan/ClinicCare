@@ -1,0 +1,79 @@
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1">Prescriptions</h2>
+      <p class="text-muted mb-0">
+        @if (role() === 'Doctor') {
+          View and manage prescriptions for your patients
+        } @else {
+          View your medical prescriptions
+        }
+      </p>
+    </div>
+    @if (role() === 'Doctor') {
+      <button mat-raised-button color="primary" (click)="onCreatePrescription()">
+        <mat-icon>add</mat-icon>
+        New Prescription
+      </button>
+    }
+  </div>
+
+  <app-list-filter-bar
+    [searchLabel]="
+      role() === 'Doctor' ? 'Search by patient or medication' : 'Search by doctor or medication'
+    "
+    (searchChange)="onSearchChange($event)"
+    [options]="['Next Day', 'Next Week', 'Next Month']"
+    label="Time Range"
+  />
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="text-center p-4">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p class="text-muted mt-2">Loading prescriptions...</p>
+    </div>
+  }
+
+  @if (!loading()) {
+    <app-list-container [columns]="columns()">
+      @for (prescription of prescriptions(); track prescription.id) {
+        <app-list-row
+          [values]="mapRow(prescription)"
+          (infoClick)="onInfoClick(prescription.id)"
+        />
+      }
+
+      @if (prescriptions().length === 0) {
+        <div class="text-center p-5">
+          <mat-icon class="text-muted" style="font-size: 64px; width: 64px; height: 64px"
+            >medical_information</mat-icon
+          >
+          <h4 class="text-muted mt-3">No prescriptions found</h4>
+          <p class="text-muted">
+            @if (search()) {
+              Try adjusting your search
+            } @else if (role() === 'Doctor') {
+              Create your first prescription for a patient
+            } @else {
+              Your prescriptions will appear here after your appointments
+            }
+          </p>
+        </div>
+      }
+    </app-list-container>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [hasPrevious]="hasPrevious()"
+        [hasNext]="hasNext()"
+        [pageSize]="pageSize()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+      />
+    }
+  }
+</div>

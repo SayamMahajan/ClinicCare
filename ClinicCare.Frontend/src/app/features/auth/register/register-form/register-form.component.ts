@@ -1,99 +1,62 @@
-import { Component, EventEmitter, inject, Input, Output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { MaterialModule } from '../../../../shared/ui/material.module';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import {
-  DoctorRegisterForm,
-  EmployeeRole,
-  Gender,
-  PatientRegisterForm,
-} from '../../../../shared/models/auth.model';
-import { SpecializationService } from '../../../../shared/services/specialization';
-import { SpecializationResponse } from '../../../../shared/models/specialization.model';
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+  ValidatorFn,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
+import { MaterialModule } from '../../../../shared/ui/material.module';
+import { Gender, PatientRegisterDto } from '../../../../shared/models/patient.model';
 
 @Component({
   selector: 'app-register-form',
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [ReactiveFormsModule, MaterialModule],
   templateUrl: './register-form.component.html',
 })
 export class RegisterFormComponent {
-  @Input({ required: true }) userType!: 'patient' | 'doctor';
-  @Output() submitted = new EventEmitter<PatientRegisterForm | DoctorRegisterForm>();
+  @Output() submitted = new EventEmitter<PatientRegisterDto>();
 
-  private specializationService = inject(SpecializationService);
   private fb = inject(FormBuilder);
 
-  specializations= signal<SpecializationResponse[]>([]);
+  minDob = new Date(new Date().getFullYear() - 120, 0, 1); 
+  maxDob = new Date(); 
 
-  ngOnInit() {
-  if (this.userType === 'doctor') {
-    this.loadSpecializations();
-  }
-}
-
-  loadSpecializations() {
-    this.specializationService.getAll().subscribe({
-      next: (data) => (this.specializations.set(data)),
-      error: () => (this.specializations.set([]))
-    });
-}
-
-  minDob = new Date(new Date().getFullYear() - 120, new Date().getMonth(), new Date().getDate());
-  maxDob = new Date();
-
-  patientForm = this.fb.nonNullable.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
-    dob: [null, Validators.required],
+  form = this.fb.nonNullable.group({
+    firstName: ['', [Validators.required, Validators.maxLength(50)]],
+    lastName: ['', [Validators.required, Validators.maxLength(50)]],
+    dob: [null as Date | null, Validators.required],
     gender: ['Male' as Gender, Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    phone: ['', Validators.required],
-    password: ['', Validators.required, Validators.minLength(8)],
-  });
-
-  doctorForm = this.fb.nonNullable.group({
-    firstName: ['', Validators.required],
-    lastName: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-    dateOfJoining: [null, Validators.required],
-    role: ['Doctor' as EmployeeRole],
-    doctorDetails: this.fb.nonNullable.group({
-      specializationId: ['', Validators.required],
-      dob: [null, Validators.required],
-      firstPracticeDate: [null, Validators.required],
-      fee: [0, Validators.required],
-      phone: ['', Validators.required],
-    })
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(100), Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
+    phone: ['', [Validators.required, Validators.minLength(10), Validators.pattern(/^\d{10}$/)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)]],
   });
 
   onSubmit() {
-    if (this.userType === 'patient') {
-      if (this.patientForm.invalid) return;
-      const raw = this.patientForm.getRawValue();
-
-      const payload: PatientRegisterForm = {
-        ...raw,
-        dob: raw.dob!,
-      };
-      this.submitted.emit(payload);
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
     }
 
-    if (this.userType === 'doctor') {
-      if (this.doctorForm.invalid) return;
-      const raw = this.doctorForm.getRawValue();
+    const raw = this.form.getRawValue();
 
-      const payload: DoctorRegisterForm = {
-        ...raw,
-        dateOfJoining: raw.dateOfJoining!, 
-        doctorDetails: {
-          ...raw.doctorDetails,
-          dob: raw.doctorDetails.dob!,
-          firstPracticeDate: raw.doctorDetails.firstPracticeDate!
-        },
-      };
+    const dob = raw.dob!;
+    const formattedDob = `${dob.getFullYear()}-${String(dob.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}-${String(dob.getDate()).padStart(2, '0')}`;
 
-      this.submitted.emit(payload);
-    }
+    const payload: PatientRegisterDto = {
+      firstName: raw.firstName,
+      lastName: raw.lastName,
+      dob: formattedDob,
+      gender: raw.gender,
+      email: raw.email,
+      phone: raw.phone,
+      password: raw.password,
+    };
+
+    this.submitted.emit(payload);
   }
 }

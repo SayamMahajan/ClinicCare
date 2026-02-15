@@ -1,52 +1,73 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { AppointmentCreateDto, AppointmentResponseDto, AppointmentStatus } from '../models/appointment.model';
+import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+import {
+  AppointmentSearchParams,
+  PaginatedResult,
+} from '../shared/models/pagination.model';
+import {
+  AppointmentResponseDto,
+  AppointmentCreateDto,
+  AppointmentUpdateDto,
+} from '../shared/models/appointment.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AppointmentService {
   private http = inject(HttpClient);
   private baseUrl = `${environment.apiUrl}/api/appointments`;
 
-  getAppointments(
-    status?: AppointmentStatus,
-    prescriptionId?: string
-  ): Observable<AppointmentResponseDto[]> {
+  getAll(
+    params: AppointmentSearchParams
+  ): Observable<PaginatedResult<AppointmentResponseDto>> {
+    let httpParams = new HttpParams()
+      .set('pageNumber', params.pageNumber.toString())
+      .set('pageSize', params.pageSize.toString());
 
-    let params = new HttpParams();
+    if (params.searchTerm) httpParams = httpParams.set('searchTerm', params.searchTerm);
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.prescriptionId)
+      httpParams = httpParams.set('prescriptionId', params.prescriptionId);
+    if (params.startDate) httpParams = httpParams.set('startDate', params.startDate);
+    if (params.endDate) httpParams = httpParams.set('endDate', params.endDate);
 
-    if (status) {
-      params = params.set('status', status);
-    }
-
-    if (prescriptionId) {
-      params = params.set('prescriptionId', prescriptionId);
-    }
-
-    return this.http.get<AppointmentResponseDto[]>(this.baseUrl, { params }).pipe(
-      catchError(() => of([]))
-    );
+    return this.http
+      .get<PaginatedResult<AppointmentResponseDto>>(this.baseUrl, { params: httpParams })
+      .pipe(
+        catchError(() =>
+          of({
+            items: [],
+            pageNumber: params.pageNumber,
+            pageSize: params.pageSize,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          })
+        )
+      );
   }
 
-  getById(id: string): Observable<AppointmentResponseDto> {
-    return this.http.get<AppointmentResponseDto>(`${this.baseUrl}/${id}`);
+  getById(id: string): Observable<AppointmentResponseDto | null> {
+    return this.http
+      .get<AppointmentResponseDto>(`${this.baseUrl}/${id}`)
+      .pipe(catchError(() => of(null)));
   }
 
-  create(appointment: any): Observable<string> {
-    return this.http.post<{ id: string }>(this.baseUrl, appointment).pipe(
-      map(response => response.id),
-      catchError(() => of(''))
-    );
+  create(appointment: AppointmentCreateDto): Observable<void> {
+    return this.http.post<void>(this.baseUrl, appointment);
   }
 
-  update(id: string, appointment: any): Observable<void> {
+  update(id: string, appointment: AppointmentUpdateDto): Observable<void> {
     return this.http.put<void>(`${this.baseUrl}/${id}`, appointment);
   }
-  
+
+  patch(id: string, appointment: AppointmentUpdateDto): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/${id}`, appointment);
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }

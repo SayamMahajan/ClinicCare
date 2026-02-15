@@ -1,8 +1,8 @@
-export interface SpecializationResponse {
-  id: string;
+export interface SpecializationCreateDto {
   type: string;
 }
 
-export interface SpecializationCreate {
+export interface SpecializationResponseDto {
+  id: string;
   type: string;
 }

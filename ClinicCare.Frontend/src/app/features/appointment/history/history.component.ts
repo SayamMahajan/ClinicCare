@@ -1,11 +1,8 @@
-import { Component, Input, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import {
   AppointmentResponseDto,
   AppointmentStatus,
   TimeSlot,
-  PastTimeRange,
-  UserRole,
 } from '../../../shared/models/appointment.model';
 import { TIME_SLOT_LABEL } from '../../../shared/utils/time-slot.mapper';
 import { ListContainerComponent } from '../../../shared/components/list-container/list-container.component';
@@ -13,25 +10,26 @@ import { ListFilterBarComponent } from '../../../shared/components/list-filter-b
 import { ListRowComponent } from '../../../shared/components/list-row/list-row.component';
 import { MaterialModule } from '../../../shared/ui/material.module';
 import { DropdownFilterComponent } from '../../../shared/components/dropdown-filter/dropdown-filter.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { Subject, takeUntil } from 'rxjs';
-import { AppointmentService } from '../../../shared/services/appointment.service';
-import { AuthService } from '../../../shared/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { AppointmentDetailsDialogComponent } from '../../../shared/components/appointment-details-dialog/appointment-details-dialog.component';
 import { resolveAppointmentActions } from '../../../shared/utils/appointment-action';
-import { PrescriptionFormDialogComponent } from '../../../shared/components/prescription-form-dialog/prescription-form-dialog.component';
-import { PrescriptionService } from '../../../shared/services/prescription.service';
 import { ViewPrescriptionDialogComponent } from '../../../shared/components/view-prescription-dialog/view-prescription-dialog.component';
+import { AppointmentService } from '../../../services/appointment.service';
+import { PrescriptionService } from '../../../services/prescription.service';
+import { AuthService } from '../../../services/auth.service';
+import { AppointmentSearchParams } from '../../../shared/models/pagination.model';
 
 @Component({
   selector: 'app-history',
   imports: [
-    CommonModule,
     MaterialModule,
     ListContainerComponent,
     ListFilterBarComponent,
     ListRowComponent,
     DropdownFilterComponent,
+    PaginationComponent,
   ],
   templateUrl: './history.component.html',
 })
@@ -42,12 +40,16 @@ export class HistoryComponent implements OnInit, OnDestroy {
   private dialog = inject(MatDialog);
   private destroy$ = new Subject<void>();
 
-  role = signal<UserRole>((this.authService.role as UserRole) || 'Doctor');
-
+  role = signal<string>(this.authService.role || 'Patient');
   search = signal('');
-  selectedStatus = signal<'All' | AppointmentStatus>('All');
   selectedSlot = signal<'All' | TimeSlot>('All');
-  selectedRange = signal<PastTimeRange>('All');
+  selectedStatus = signal<'All' | 'Completed' | 'Cancelled'>('All');
+
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalPages = signal(0);
+  hasPrevious = signal(false);
+  hasNext = signal(false);
 
   appointments = signal<AppointmentResponseDto[]>([]);
   loading = signal(false);
@@ -61,21 +63,43 @@ export class HistoryComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadAppointments(status?: 'All' | AppointmentStatus) {
+  loadAppointments() {
     this.loading.set(true);
 
-    const apiStatus = status === 'All' ? undefined : status;
+    const params: AppointmentSearchParams = {
+      pageNumber: this.currentPage(),
+      pageSize: this.pageSize(),
+      searchTerm: this.search() || undefined,
+      status:
+        this.selectedStatus() !== 'All'
+          ? (this.selectedStatus() as AppointmentStatus)
+          : undefined,
+          };
 
     this.appointmentService
-      .getAppointments(apiStatus)
+      .getAll(params)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (data: AppointmentResponseDto[]) => {
-          this.appointments.set(data);
+        next: (result) => {
+          const pastAppointments = result.items.filter((apt) => {
+            const aptDate = new Date(apt.date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            return (
+              aptDate < today &&
+              (apt.status === 'Completed' || apt.status === 'Cancelled')
+            );
+          });
+
+          this.appointments.set(pastAppointments);
+          this.totalPages.set(result.totalPages);
+          this.hasPrevious.set(result.hasPreviousPage);
+          this.hasNext.set(result.hasNextPage);
           this.loading.set(false);
         },
         error: (err) => {
-          console.error('Failed to load appointments', err);
+          console.error('Failed to load appointment history', err);
           this.appointments.set([]);
           this.loading.set(false);
         },
@@ -87,41 +111,14 @@ export class HistoryComponent implements OnInit, OnDestroy {
     'Date',
     'Slot',
     'Status',
+    'Action',
   ]);
 
   filteredAppointments = computed(() => {
-    const today = new Date();
-
     return this.appointments().filter((a) => {
-      const name =
-        this.role() === 'Doctor'
-          ? `${a.patient.firstName} ${a.patient.lastName}`
-          : `${a.doctor.firstName} ${a.doctor.lastName}`;
-
-      const matchesSearch = name.toLowerCase().includes(this.search().toLowerCase());
-
-      const matchesSlot = this.selectedSlot() === 'All' || a.timeSlot === this.selectedSlot();
-
-      const appointmentDate = new Date(a.date);
-      const diffDays = (today.getTime() - appointmentDate.getTime()) / (1000 * 60 * 60 * 24);
-
-      if (diffDays < 0) return false;
-
-      let matchesRange = true;
-
-      switch (this.selectedRange()) {
-        case 'Past Day':
-          matchesRange = diffDays <= 1;
-          break;
-        case 'Past Week':
-          matchesRange = diffDays > 1 && diffDays <= 7;
-          break;
-        case 'Past Month':
-          matchesRange = diffDays > 7 && diffDays <= 30;
-          break;
-      }
-
-      return matchesSearch && matchesSlot && matchesRange;
+      const matchesSlot =
+        this.selectedSlot() === 'All' || a.timeSlot === this.selectedSlot();
+      return matchesSlot;
     });
   });
 
@@ -135,25 +132,38 @@ export class HistoryComponent implements OnInit, OnDestroy {
     return TIME_SLOT_LABEL[slot];
   }
 
-  onRangeChange(value: string) {
-    this.selectedRange.set(value as PastTimeRange);
+  onSearchChange(value: string) {
+    this.search.set(value);
+    this.currentPage.set(1)
+    this.loadAppointments();
+  }
+
+  onStatusChange(value: string) {
+    this.selectedStatus.set(value as 'All' | 'Completed' | 'Cancelled');
+    this.currentPage.set(1);
+    this.loadAppointments();
   }
 
   onSlotChange(value: string) {
     this.selectedSlot.set(value as 'All' | TimeSlot);
   }
 
-  onStatusChange(value: string) {
-    const status = value as 'All' | AppointmentStatus;
-    this.selectedStatus.set(status);
-    this.loadAppointments(status);
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadAppointments();
+  }
+
+  onPageSizeChange(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+    this.loadAppointments();
   }
 
   onInfo(id: string) {
     const appointment = this.appointments().find((a) => a.id === id);
     if (!appointment) return;
 
-    const actions = resolveAppointmentActions(appointment, 'scheduled');
+    const actions = resolveAppointmentActions(appointment, 'history');
 
     this.dialog
       .open(AppointmentDetailsDialogComponent, {
@@ -165,40 +175,9 @@ export class HistoryComponent implements OnInit, OnDestroy {
       })
       .afterClosed()
       .subscribe((action) => {
-        switch (action) {
-          case 'addPrescription':
-            this.addPrescription(id);
-            break;
-          case 'viewPrescription':
-            this.viewPrescription(id);
-            break;
+        if (action === 'viewPrescription') {
+          this.viewPrescription(id);
         }
-      });
-  }
-
-  addPrescription(appointmentId: string) {
-    const apt = this.appointments().find((a) => a.id === appointmentId);
-    if (!apt) return;
-
-    this.dialog
-      .open(PrescriptionFormDialogComponent, {
-        width: '700px',
-        disableClose: true,
-        data: {
-          patientId: apt.patient.id,
-          doctorId: apt.doctor.id,
-          appointmentId: apt.id,
-          patientName: `${apt.patient.firstName} ${apt.patient.lastName}`,
-          doctorName: `${apt.doctor.firstName} ${apt.doctor.lastName}`,
-        },
-      })
-      .afterClosed()
-      .subscribe((payload) => {
-        if (!payload) return;
-
-        this.prescriptionService.createPrescription(payload).subscribe(() => {
-          this.loadAppointments();
-        });
       });
   }
 

@@ -2,19 +2,48 @@
 
   <app-list-filter-bar
     searchLabel="Search payments"
-    [options]="['Past Day', 'Past Week', 'Past Month']"
-    label="Time Range"
-    (searchChange)="search.set($event)"
+    [options]="['All', 'Completed', 'Cancelled']"
+    label="Status"
+    (searchChange)="onSearchChange($event)"]
   />
+  @if (loading()) {
+  <div class="text-center p-4">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p class="text-muted mt-2">Loading payments...</p>
+  </div>
+  }
+  
+  @if (!loading()) {
 
-  <app-list-container [columns]="columns">
+    <app-list-container [columns]="columns">
 
-    @for (payment of filteredPayments(); track payment.id) {
-      <app-list-row
-        [values]="mapRow(payment)"
-        (infoClick)="onInfoClick(payment)"
+      @for (payment of payments(); track payment.id) {
+        <app-list-row
+          [values]="mapRow(payment)"
+          (infoClick)="onInfoClick(payment)"
+        />
+      }
+
+      @if (payments().length === 0) {
+        <div class="text-center text-muted py-5">
+          No payments found
+        </div>
+      }
+
+    </app-list-container>
+
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [hasPrevious]="hasPreviousPage()"
+        [hasNext]="hasNextPage()"
+        [pageSize]="pageSize()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
       />
     }
 
-  </app-list-container>
+  }
+
 </div>

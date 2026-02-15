@@ -4,7 +4,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { MaterialModule } from '../../ui/material.module';
 import { AppToolbarComponent } from '../app-toolbar/app-toolbar.component';
 import { AppSidenavComponent } from '../app-sidenav/app-sidenav.component';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-dashboard-layout',

@@ -1,7 +1,6 @@
-import { SpecializationResponse } from "../models/specialization.model";
-
+import { SpecializationResponseDto } from "../models/specialization.model";
 export function buildSpecializationMap(
-  specializations: SpecializationResponse[]
+  specializations: SpecializationResponseDto[]
 ): Map<string, string> {
   return new Map(
     specializations.map(s => [s.id, s.type])

@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { LoaderService } from '../../services/loader.service';
-
+import { LoaderService } from '../../../services/loader.service';
 
 @Component({
   selector: 'app-loader',

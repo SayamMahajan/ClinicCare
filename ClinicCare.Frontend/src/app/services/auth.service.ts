@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { Observable, tap } from 'rxjs';
-import { AuthResponse, LoginFormValue } from '../models/auth.model';
 import { TokenService } from './token.service';
-import { DecodedToken } from '../models/token.model';
 import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
+import { AuthResponse, LoginFormValue } from '../shared/models/auth.model';
+import { DecodedToken } from '../shared/models/token.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

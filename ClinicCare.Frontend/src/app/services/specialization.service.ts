@@ -1,24 +1,31 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, of } from 'rxjs';
-import { PaginationParams, PaginatedResult } from '../shared/models/pagination.model';
 import { environment } from '../../environments/environment';
-import { PatientResponseDto, PatientUpdateDto } from '../shared/models/patient.model';
+import { PaginatedResult, PaginationParams } from '../shared/models/pagination.model';
+import {
+  SpecializationResponseDto,
+  SpecializationCreateDto,
+} from '../shared/models/specialization.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class PatientService {
+export class SpecializationService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiUrl}/api/patients`;
+  private baseUrl = `${environment.apiUrl}/api/specializations`;
 
-  getAll(params: PaginationParams): Observable<PaginatedResult<PatientResponseDto>> {
+  getAll(
+    params: PaginationParams
+  ): Observable<PaginatedResult<SpecializationResponseDto>> {
     const httpParams = new HttpParams()
       .set('pageNumber', params.pageNumber.toString())
       .set('pageSize', params.pageSize.toString());
 
     return this.http
-      .get<PaginatedResult<PatientResponseDto>>(this.baseUrl, { params: httpParams })
+      .get<PaginatedResult<SpecializationResponseDto>>(this.baseUrl, {
+        params: httpParams,
+      })
       .pipe(
         catchError(() =>
           of({
@@ -33,18 +40,14 @@ export class PatientService {
       );
   }
 
-  getById(id: string): Observable<PatientResponseDto | null> {
+  getById(id: string): Observable<SpecializationResponseDto | null> {
     return this.http
-      .get<PatientResponseDto>(`${this.baseUrl}/${id}`)
+      .get<SpecializationResponseDto>(`${this.baseUrl}/${id}`)
       .pipe(catchError(() => of(null)));
   }
 
-  update(id: string, patient: PatientUpdateDto): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/${id}`, patient);
-  }
-
-  patch(id: string, patient: PatientUpdateDto): Observable<void> {
-    return this.http.patch<void>(`${this.baseUrl}/${id}`, patient);
+  create(dto: SpecializationCreateDto): Observable<void> {
+    return this.http.post<void>(this.baseUrl, dto);
   }
 
   delete(id: string): Observable<void> {

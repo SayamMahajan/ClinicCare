@@ -8,7 +8,7 @@ export const AUTH_ROUTES: Routes = [
         .then(c => c.LoginPageComponent)
   },
   {
-    path: 'register/:type',
+    path: 'register/',
     loadComponent: () =>
       import('./register/register-page/register-page.component')
         .then(c => c.RegisterPageComponent)

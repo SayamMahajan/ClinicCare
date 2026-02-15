@@ -199,7 +199,15 @@ namespace ClinicCare.Business.Services
                 FirstName = p.FirstName,
                 LastName = p.LastName,
                 Email = p.Email,
-                Phone = p.Phone
+                Phone = p.Phone,
+                Gender = p.Gender,
+                DOB = p.DOB,
+                EmergencyContact = p.EmergencyContact,
+                BloodGroup = p.BloodGroup,
+                BodyWeight = p.BodyWeight,
+                Height = p.Height,
+                Allergies = p.Allergies,
+                Address = p.Address,
             };
         }
     }

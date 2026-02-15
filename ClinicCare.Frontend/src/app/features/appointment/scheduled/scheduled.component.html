@@ -1,31 +1,50 @@
 <div class="container-fluid p-4">
-
+  <!-- Search and Filters -->
   <app-list-filter-bar
-    searchLabel="Search patient"
+    [searchLabel]="role() === 'Doctor' ? 'Search patient' : 'Search doctor'"
+    (searchChange)="onSearchChange($event)"
     [options]="['Next Day', 'Next Week', 'Next Month']"
     label="Time Range"
-    (searchChange)="search.set($event)"
-    (optionChange)="onRangeChange($event)"
   />
 
   <app-dropdown-filter
-    [options]="['Morning', 'EarlyNoon', 'LateNoon', 'Evening', 'Night']"
+    [options]="['All', 'Morning', 'Earlynoon', 'Latenoon', 'Evening', 'Night']"
     label="Time Slot"
     (valueChange)="onSlotChange($event)"
   />
 
-  <app-list-container [columns]="columns()">
+  @if (loading()) {
+    <div class="text-center p-4">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+  }
 
-    @for (apt of filteredAppointments(); track apt.id) {
-      <app-list-row
-        [values]="[
-          getUserName(apt),
-          apt.date,
-          getSlotLabel(apt.timeSlot)
-        ]"
-        (infoClick)="onInfo(apt.id)"
+  @if (!loading()) {
+    <app-list-container [columns]="columns()">
+      @for (apt of filteredAppointments(); track apt.id) {
+        <app-list-row
+          [values]="[getUserName(apt), apt.date, getSlotLabel(apt.timeSlot)]"
+          (infoClick)="onInfo(apt.id)"
+        />
+      }
+
+      @if (filteredAppointments().length === 0) {
+        <div class="text-center p-4 text-muted">
+          <p>No scheduled appointments found</p>
+        </div>
+      }
+    </app-list-container>
+
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [hasPrevious]="hasPrevious()"
+        [hasNext]="hasNext()"
+        [pageSize]="pageSize()"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
       />
     }
-  </app-list-container>
-
+  }
 </div>

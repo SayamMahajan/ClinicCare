@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class TokenService {
+  getUserId(): any {
+    throw new Error("Method not implemented.");
+  }
   private readonly TOKEN_KEY = 'token';
 
   set(token: string) {

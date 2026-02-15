@@ -1,15 +1,20 @@
-export type Role = 'Admin' | 'Doctor' | 'Patient';
+import { PatientMiniDto } from './patient.model';
+import { DoctorMiniDto } from './employee.model';
 
-export interface MiniUser  {
-  id: string;
-  firstName: string;
-  lastName: string;
+export type PaymentType = 'Paid' | 'Refund';
+
+export interface PaymentCreateDto {
+  amount: number;
+  patientId: string;
+  doctorId: string;
 }
 
-export interface Payment {
+export interface PaymentResponseDto {
   id: string;
+  transactionId: string;
   amount: number;
-  patient: MiniUser ;
-  doctor: MiniUser ;
-  createdAt: string;
+  patient: PatientMiniDto;
+  doctor: DoctorMiniDto;
+  type: PaymentType;
+  createdAt: string; 
 }

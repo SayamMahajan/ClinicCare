@@ -9,10 +9,49 @@
       }
     </div>
 
-
     <mat-divider></mat-divider>
 
     <ng-content></ng-content>
+
+    @if (showPagination && totalPages > 1) {
+      <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-muted">Items per page:</span>
+          <select 
+            class="form-select form-select-sm"
+            style="width: auto;"
+            [value]="pageSize"
+            (change)="onPageSizeChange($event)">
+            <option [value]="5">5</option>
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button 
+            mat-icon-button
+            [disabled]="!hasPreviousPage"
+            (click)="onPreviousPage()"
+            matTooltip="Previous page">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          
+          <span class="text-muted">
+            Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
+          </span>
+          
+          <button 
+            mat-icon-button
+            [disabled]="!hasNextPage"
+            (click)="onNextPage()"
+            matTooltip="Next page">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
 
   </mat-card-content>
 </mat-card>
