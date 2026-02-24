@@ -128,6 +128,7 @@ namespace ClinicCare.Business.Services
             return new PaymentResponseDto
             {
                 Id = p.Id,
+                TransactionId = p.TransactionId,
                 Amount = p.Amount,
                 Patient = new PatientMiniDto
                 {

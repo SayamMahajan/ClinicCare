@@ -9,21 +9,15 @@ namespace ClinicCare.DataAccess.Models
         public Guid Id { get; set; }
 
         [Required]
-        public Guid PatientId { get; set; }
-
-        [Required]
-        public Guid DoctorId { get; set; }
+        public Guid AppointmentId { get; set; } 
 
         [Required]
         [MaxLength(1000)]
-        public string Description { get; set; } 
+        public string Description { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey(nameof(PatientId))]
-        public Patient Patient { get; set; }
-
-        [ForeignKey(nameof(DoctorId))]
-        public Employee Doctor { get; set; }
+        [ForeignKey(nameof(AppointmentId))]
+        public Appointment Appointment { get; set; } = null!;
     }
 }

@@ -114,12 +114,6 @@ export class ManageEmployeesComponent implements OnInit, OnDestroy {
     this.loadEmployees();
   }
 
-  onPageSizeChange(size: number) {
-    this.pageSize.set(size);
-    this.currentPage.set(1); 
-    this.loadEmployees();
-  }
-
   onInfo(id: string) {
     const employee = this.employees().find((e) => e.id === id);
     if (!employee) return;

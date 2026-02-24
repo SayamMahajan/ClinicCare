@@ -43,9 +43,6 @@ namespace ClinicCare.DataAccess.Migrations
                     b.Property<Guid>("PaymentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("PrescriptionId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -58,9 +55,8 @@ namespace ClinicCare.DataAccess.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("PaymentId");
-
-                    b.HasIndex("PrescriptionId");
+                    b.HasIndex("PaymentId")
+                        .IsUnique();
 
                     b.ToTable("Appointments");
                 });
@@ -124,8 +120,8 @@ namespace ClinicCare.DataAccess.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
@@ -199,8 +195,8 @@ namespace ClinicCare.DataAccess.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.HasKey("Id");
 
@@ -226,13 +222,7 @@ namespace ClinicCare.DataAccess.Migrations
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("EmployeeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("PatientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("PatientId1")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("TransactionId")
@@ -247,11 +237,7 @@ namespace ClinicCare.DataAccess.Migrations
 
                     b.HasIndex("DoctorId");
 
-                    b.HasIndex("EmployeeId");
-
                     b.HasIndex("PatientId");
-
-                    b.HasIndex("PatientId1");
 
                     b.HasIndex("TransactionId")
                         .IsUnique();
@@ -265,6 +251,9 @@ namespace ClinicCare.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -273,27 +262,10 @@ namespace ClinicCare.DataAccess.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<Guid>("DoctorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("EmployeeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PatientId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("PatientId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("DoctorId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("PatientId");
-
-                    b.HasIndex("PatientId1");
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
 
                     b.ToTable("Prescriptions");
                 });
@@ -328,23 +300,16 @@ namespace ClinicCare.DataAccess.Migrations
                         .IsRequired();
 
                     b.HasOne("ClinicCare.DataAccess.Models.Payment", "Payment")
-                        .WithMany()
-                        .HasForeignKey("PaymentId")
+                        .WithOne("Appointment")
+                        .HasForeignKey("ClinicCare.DataAccess.Models.Appointment", "PaymentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("ClinicCare.DataAccess.Models.Prescription", "Prescription")
-                        .WithMany()
-                        .HasForeignKey("PrescriptionId")
-                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
 
                     b.Navigation("Payment");
-
-                    b.Navigation("Prescription");
                 });
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.DoctorDetail", b =>
@@ -369,24 +334,16 @@ namespace ClinicCare.DataAccess.Migrations
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Payment", b =>
                 {
                     b.HasOne("ClinicCare.DataAccess.Models.Employee", "Doctor")
-                        .WithMany()
+                        .WithMany("Payments")
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ClinicCare.DataAccess.Models.Employee", null)
-                        .WithMany("PaymentsReceived")
-                        .HasForeignKey("EmployeeId");
-
                     b.HasOne("ClinicCare.DataAccess.Models.Patient", "Patient")
-                        .WithMany()
+                        .WithMany("Payments")
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("ClinicCare.DataAccess.Models.Patient", null)
-                        .WithMany("PaymentsSent")
-                        .HasForeignKey("PatientId1");
 
                     b.Navigation("Doctor");
 
@@ -395,29 +352,18 @@ namespace ClinicCare.DataAccess.Migrations
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Prescription", b =>
                 {
-                    b.HasOne("ClinicCare.DataAccess.Models.Employee", "Doctor")
-                        .WithMany()
-                        .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("ClinicCare.DataAccess.Models.Appointment", "Appointment")
+                        .WithOne("Prescription")
+                        .HasForeignKey("ClinicCare.DataAccess.Models.Prescription", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ClinicCare.DataAccess.Models.Employee", null)
-                        .WithMany("PrescriptionsWritten")
-                        .HasForeignKey("EmployeeId");
+                    b.Navigation("Appointment");
+                });
 
-                    b.HasOne("ClinicCare.DataAccess.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ClinicCare.DataAccess.Models.Patient", null)
-                        .WithMany("Prescriptions")
-                        .HasForeignKey("PatientId1");
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("Patient");
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.Appointment", b =>
+                {
+                    b.Navigation("Prescription");
                 });
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Employee", b =>
@@ -426,18 +372,19 @@ namespace ClinicCare.DataAccess.Migrations
 
                     b.Navigation("DoctorDetails");
 
-                    b.Navigation("PaymentsReceived");
-
-                    b.Navigation("PrescriptionsWritten");
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Patient", b =>
                 {
                     b.Navigation("Appointments");
 
-                    b.Navigation("PaymentsSent");
+                    b.Navigation("Payments");
+                });
 
-                    b.Navigation("Prescriptions");
+            modelBuilder.Entity("ClinicCare.DataAccess.Models.Payment", b =>
+                {
+                    b.Navigation("Appointment");
                 });
 
             modelBuilder.Entity("ClinicCare.DataAccess.Models.Specialization", b =>

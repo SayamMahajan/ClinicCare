@@ -35,5 +35,7 @@ namespace ClinicCare.DataAccess.Models
 
         [ForeignKey(nameof(DoctorId))]
         public Employee Doctor { get; set; }
+
+        public Appointment? Appointment { get; set; }
     }
 }

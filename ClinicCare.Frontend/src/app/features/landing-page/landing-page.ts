@@ -9,7 +9,7 @@ import { Router, RouterLink } from "@angular/router";
 })
 export class LandingPage {
   private router = inject(Router);
-  imagePath = signal(`url('bgimg.png')`);
+  imagePath = signal(`url('background_img.png')`);
   selectedLoginType = signal('login');
 
   onLogin(event: Event): void {

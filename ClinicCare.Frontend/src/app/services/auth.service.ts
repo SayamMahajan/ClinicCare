@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { TokenService } from './token.service';
 import { jwtDecode } from 'jwt-decode';
@@ -15,6 +15,8 @@ export class AuthService {
   private tokenService = inject(TokenService);
 
   private baseUrl = `${environment.apiUrl}/api`;
+
+  bgImagePath = signal(`url('background_img.png')`);
 
   loginPatient(data: LoginFormValue): Observable<AuthResponse> {
     return this.http

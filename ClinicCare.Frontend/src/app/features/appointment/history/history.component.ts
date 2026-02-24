@@ -153,12 +153,6 @@ export class HistoryComponent implements OnInit, OnDestroy {
     this.loadAppointments();
   }
 
-  onPageSizeChange(size: number) {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
-    this.loadAppointments();
-  }
-
   onInfo(id: string) {
     const appointment = this.appointments().find((a) => a.id === id);
     if (!appointment) return;

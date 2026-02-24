@@ -14,7 +14,7 @@
     <mat-list>
       @for (item of data.details; track item.label) {
         <mat-list-item>
-          <strong>{{ item.label }}</strong>&nbsp;– {{ item.value }}
+          <strong>{{ item.label }}</strong>&nbsp;- {{ item.value | titlecase}}  
         </mat-list-item>
       }
     </mat-list>

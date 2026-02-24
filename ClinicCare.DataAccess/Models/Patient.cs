@@ -35,7 +35,8 @@ namespace ClinicCare.DataAccess.Models
 
         [Required]
         [Phone]
-        [MaxLength(15)]
+        [MinLength(10)]
+        [MaxLength(10)]
         public string Phone { get; set; } 
 
         // Optional fields
@@ -61,7 +62,6 @@ namespace ClinicCare.DataAccess.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<Appointment> Appointments { get; set; } = [];
-        public ICollection<Payment> PaymentsSent { get; set; } = [];
-        public ICollection<Prescription> Prescriptions { get; set; } = [];
+        public ICollection<Payment> Payments { get; set; } = [];
     }
 }

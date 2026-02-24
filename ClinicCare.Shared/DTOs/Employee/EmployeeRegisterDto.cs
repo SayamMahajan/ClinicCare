@@ -37,7 +37,8 @@ namespace ClinicCare.Shared.DTOs.Employee
         public Gender Gender { get; set; }
 
         [Phone]
-        [MaxLength(15)]
+        [MinLength(10)]
+        [MaxLength(10)]
         public string Phone { get; set; }
 
         // Doctor-only

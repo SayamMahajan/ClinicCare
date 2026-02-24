@@ -21,39 +21,35 @@ namespace ClinicCare.DataAccess.Data
 
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Payment)
-                .WithMany()
-                .HasForeignKey(a => a.PaymentId)
+                .WithOne(p => p.Appointment)
+                .HasForeignKey<Appointment>(a => a.PaymentId)
+                .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Appointment>()
-                .HasOne(a => a.Prescription)
-                .WithMany()
-                .HasForeignKey(a => a.PrescriptionId)
-                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Patient)
-                .WithMany()
+                .WithMany(p => p.Payments)
                 .HasForeignKey(p => p.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Payment>()
                 .HasOne(p => p.Doctor)
-                .WithMany()
+                .WithMany(e => e.Payments)
                 .HasForeignKey(p => p.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Prescription>()
-                .HasOne(p => p.Patient)
-                .WithMany()
-                .HasForeignKey(p => p.PatientId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(p => p.Appointment)
+                .WithOne(a => a.Prescription)
+                .HasForeignKey<Prescription>(p => p.AppointmentId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Prescription>()
-                .HasOne(p => p.Doctor)
-                .WithMany()
-                .HasForeignKey(p => p.DoctorId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<DoctorDetail>()
+                .HasOne(d => d.Employee)
+                .WithOne(e => e.DoctorDetails)
+                .HasForeignKey<DoctorDetail>(d => d.DoctorId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Employee>()
                 .HasIndex(e => e.Email)
@@ -64,7 +60,7 @@ namespace ClinicCare.DataAccess.Data
                 .IsUnique();
 
             modelBuilder.Entity<Payment>()
-                .HasIndex(e => e.TransactionId)
+                .HasIndex(p => p.TransactionId)
                 .IsUnique();
         }
     }

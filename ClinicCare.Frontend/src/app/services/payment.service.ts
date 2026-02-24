@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { PaginatedResult, PaymentSearchParams } from '../shared/models/pagination.model';
 import { environment } from '../../environments/environment';
 import { PaymentResponseDto, PaymentCreateDto } from '../shared/models/payment.model';
@@ -44,7 +44,16 @@ export class PaymentService {
       .pipe(catchError(() => of(null)));
   }
 
-  create(payment: PaymentCreateDto): Observable<void> {
-    return this.http.post<void>(this.baseUrl, payment);
-  }
+  create(payment: PaymentCreateDto): Observable<string> {
+  return this.http.post(this.baseUrl, payment, {
+    observe: 'response',
+  }).pipe(
+    map(res => {
+      const location = res.headers.get('Location');
+      if (!location) throw new Error('Location header missing');
+
+      return location.split('/').pop()!; 
+    })
+  );
+}
 }

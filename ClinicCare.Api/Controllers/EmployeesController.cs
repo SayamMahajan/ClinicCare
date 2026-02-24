@@ -2,7 +2,6 @@
 using ClinicCare.Business.Services.Interfaces;
 using ClinicCare.Shared.DTOs.Employee;
 using ClinicCare.Shared.DTOs.Pagination;
-using ClinicCare.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,8 +29,7 @@ namespace ClinicCare.Api.Controllers
             return Ok(result);
         }
 
-        [AllowAnonymous]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]

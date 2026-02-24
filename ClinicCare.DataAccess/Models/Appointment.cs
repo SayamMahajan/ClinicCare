@@ -1,6 +1,5 @@
 ﻿using ClinicCare.Shared.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ClinicCare.DataAccess.Models
 {
@@ -13,10 +12,10 @@ namespace ClinicCare.DataAccess.Models
         public Guid PatientId { get; set; }
 
         [Required]
-        public Guid DoctorId { get; set; } 
+        public Guid DoctorId { get; set; }
 
         [Required]
-        public AppointmentStatus Status { get; set; } 
+        public AppointmentStatus Status { get; set; }
 
         [Required]
         public DateOnly Date { get; set; }
@@ -27,20 +26,12 @@ namespace ClinicCare.DataAccess.Models
         [Required]
         public Guid PaymentId { get; set; }
 
-        public Guid? PrescriptionId { get; set; }
-
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey(nameof(PatientId))]
-        public Patient Patient { get; set; }
+        public Patient Patient { get; set; } = null!;
+        public Employee Doctor { get; set; } = null!;
+        public Payment Payment { get; set; } = null!;
 
-        [ForeignKey(nameof(DoctorId))]
-        public Employee Doctor { get; set; }
-
-        [ForeignKey(nameof(PaymentId))]
-        public Payment Payment { get; set; }
-
-        [ForeignKey(nameof(PrescriptionId))]
         public Prescription? Prescription { get; set; }
     }
 }

@@ -4,7 +4,6 @@
     value="All"
     (selectionChange)="valueChange.emit($event.value)"
   >
-    <mat-option value="All">All</mat-option>
     @for (opt of options; track opt) {
       <mat-option [value]="opt">{{ opt }}</mat-option>
     }

@@ -196,8 +196,8 @@ namespace ClinicCare.Business.Services
                 Id = a.Id,
                 Date = a.Date,
                 TimeSlot = a.TimeSlot,
+                PrescriptionId = a.Prescription != null ? a.Prescription.Id : null,
                 Status = a.Status,
-                PrescriptionId = a.PrescriptionId,
                 Patient = new PatientMiniDto
                 {
                     Id = a.Patient.Id,

@@ -1,7 +1,18 @@
-<div class="vh-100 d-flex align-items-center justify-content-center ">
-  <mat-card class="w-100 p-4" style="max-width: 420px;">
-    <app-login-form
-      (submitted)="onLogin($event)"
-    />
+<div
+  class="vh-100 d-flex align-items-center justify-content-center"
+  [style.background-image]="imagePath()"
+  style="background-size: cover;
+         background-position: center;
+         background-repeat: no-repeat;"
+>
+  <mat-card class="w-100 p-4 shadow-lg" style="max-width: 420px;">
+
+    <mat-card-title class="text-center mb-4">
+      <h3 class="fw-bold text-success mb-1">Clinic Care</h3>
+      <span class="text-muted">Login</span>
+    </mat-card-title>
+
+    <app-login-form [userType]="userType()" (submitted)="onLogin($event)"></app-login-form>
+
   </mat-card>
 </div>

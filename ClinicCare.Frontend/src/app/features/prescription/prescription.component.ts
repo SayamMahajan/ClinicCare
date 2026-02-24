@@ -107,12 +107,6 @@ export class PrescriptionListComponent implements OnInit, OnDestroy {
     this.loadPrescriptions();
   }
 
-  onPageSizeChange(size: number) {
-    this.pageSize.set(size);
-    this.currentPage.set(1); 
-    this.loadPrescriptions();
-  }
-
   mapRow(prescription: PrescriptionResponseDto): string[] {
     const userName =
       this.role() === 'Doctor'

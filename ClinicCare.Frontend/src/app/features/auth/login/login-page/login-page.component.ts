@@ -18,6 +18,7 @@ export class LoginPageComponent {
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
 
+  imagePath = this.authService.bgImagePath;
   userType = signal<AuthUser>('patient');
   loading = signal(false);
 

@@ -1,5 +1,4 @@
 ﻿using ClinicCare.DataAccess.Data;
-using ClinicCare.DataAccess.Repositories.Interfaces;
 using ClinicCare.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,7 +44,6 @@ namespace ClinicCare.Business.Services
         private async Task ProcessPendingAppointments()
         {
             using var scope = _serviceProvider.CreateScope();
-            var appointmentRepo = scope.ServiceProvider.GetRequiredService<IAppointmentRepository>();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             var now = DateTime.Now;
@@ -66,8 +64,8 @@ namespace ClinicCare.Business.Services
 
             var oldApproved = await dbContext.Appointments
                 .Where(a => a.Status == AppointmentStatus.Approved
-                         && a.PrescriptionId == null
-                         && a.CreatedAt < twentyFourHoursAgo)
+                         && a.CreatedAt < twentyFourHoursAgo
+                         && !dbContext.Prescriptions.Any(p => p.AppointmentId == a.Id))
                 .ToListAsync();
 
             foreach (var apt in oldApproved)

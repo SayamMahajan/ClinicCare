@@ -128,10 +128,4 @@ export class PaymentsComponent implements OnInit {
     this.currentPage.set(page);
     this.loadPayments();
   }
-
-  onPageSizeChange(size: number) {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
-    this.loadPayments();
-  }
 }

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace ClinicCare.Api.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
     [ApiController]
     public class SpecializationsController : ControllerBase
     {
@@ -40,6 +39,7 @@ namespace ClinicCare.Api.Controllers
             return Ok(prescription);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(typeof(void), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
@@ -51,6 +51,7 @@ namespace ClinicCare.Api.Controllers
             return CreatedAtRoute("GetSpecializationById", new { id }, null);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]

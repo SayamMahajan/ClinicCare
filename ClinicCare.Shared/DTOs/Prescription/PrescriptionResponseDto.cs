@@ -6,6 +6,7 @@ namespace ClinicCare.Shared.DTOs.Prescription
     public class PrescriptionResponseDto
     {
         public Guid Id { get; set; }
+        public Guid AppointmentId { get; set; }
         public PatientMiniDto Patient { get; set; }
         public DoctorMiniDto Doctor { get; set; }
         public List<MedicationDto> Description { get; set; } = new();

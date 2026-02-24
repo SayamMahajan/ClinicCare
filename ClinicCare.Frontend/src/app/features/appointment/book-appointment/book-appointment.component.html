@@ -1,9 +1,4 @@
-<div class="container-fluid p-4">
-  <div class="mb-4">
-    <h2 class="mb-1">Book an Appointment</h2>
-    <p class="text-muted">Select a doctor, date, and time slot to book your appointment</p>
-  </div>
-
+<div class="container-fluid">
   <mat-card class="mb-4">
     <mat-card-header>
       <mat-card-title>
@@ -15,17 +10,10 @@
       <app-list-filter-bar
         searchLabel="Search doctors by name"
         (searchChange)="onSearchChange($event)"
-        [options]="['Next Day', 'Next Week', 'Next Month']"
-        label="Time Range"
-        
-      />
-
-      <app-dropdown-filter
         [options]="specializationOptions()"
         label="Specialization"
-        (valueChange)="onSpecializationChange($event)"
+        (optionChange)="onSpecializationChange($event)" 
       />
-
       @if (loadingDoctors()) {
         <div class="text-center p-4">
           <mat-spinner diameter="50"></mat-spinner>
@@ -35,7 +23,7 @@
       @if (!loadingDoctors()) {
         <div class="row mt-3">
           @for (doctor of doctors(); track doctor.id) {
-            <div class="col-md-6 col-lg-4 mb-3">
+            <div class="col-md-6 col-lg-4 mb-4">
               <mat-card
                 class="doctor-card h-100"
                 [class.selected]="isSelected(doctor)"
@@ -43,18 +31,17 @@
               >
                 <mat-card-content>
                   <div class="d-flex align-items-start">
-                    <mat-icon class="me-3" color="primary">account_circle</mat-icon>
                     <div class="flex-grow-1">
-                      <h5 class="mb-1">Dr. {{ doctor.firstName }} {{ doctor.lastName }}</h5>
+                      <h5 class="mb-1">Dr. {{ doctor.firstName | titlecase}} {{ doctor.lastName | titlecase}}</h5>
                       <p class="text-muted mb-1">
-                        <small>{{ getSpecializationName(doctor.specializationId) }}</small>
+                        <small>{{ getSpecializationName(doctor.specializationId) | uppercase}}</small>
                       </p>
                       <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="badge bg-light text-dark">
                           {{ getExperienceYears(doctor.firstPracticeDate) }} exp
                         </span>
                         @if (doctor.fee) {
-                          <span class="text-primary fw-bold">${{ doctor.fee }}</span>
+                          <span class="text-primary fw-bold">{{ doctor.fee | currency: 'INR' }}</span>
                         }
                       </div>
                     </div>
@@ -70,11 +57,7 @@
           @if (doctors().length === 0) {
             <div class="col-12">
               <div class="text-center p-5">
-                <mat-icon class="text-muted" style="font-size: 64px; width: 64px; height: 64px"
-                  >person_search</mat-icon
-                >
-                <h4 class="text-muted mt-3">No doctors found</h4>
-                <p class="text-muted">Try adjusting your search or filter</p>
+                <h4 class="text-muted mt-3">No doctor found</h4>
               </div>
             </div>
           }
@@ -88,72 +71,60 @@
             [hasNext]="hasNext()"
             [pageSize]="pageSize()"
             (pageChange)="onPageChange($event)"
-            (pageSizeChange)="onPageSizeChange($event)"
           />
         }
       }
     </mat-card-content>
   </mat-card>
 
-  <mat-card class="mb-4">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon class="me-2">calendar_today</mat-icon>
-        Step 2: Select Date
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content class="mt-3">
-      <mat-form-field appearance="outline" class="w-100">
-        <mat-label>Appointment Date</mat-label>
-        <input
-          matInput
-          [matDatepicker]="picker"
-          [min]="minDate"
-          [value]="selectedDate()"
-          (dateChange)="onDateChange($event)"
-          placeholder="Choose a date"
-          readonly
-        />
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-        <mat-hint>Select a date for your appointment</mat-hint>
-      </mat-form-field>
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <mat-card class="h-100">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="me-2">calendar_today</mat-icon>
+            Step 2: Select Date
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="mt-3">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Appointment Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="picker"
+              [min]="minDate"
+              [value]="selectedDate()"
+              (dateChange)="onDateChange($event)"
+              placeholder="Choose a date"
+              readonly
+            />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
-      @if (selectedDate()) {
-        <div class="alert alert-success d-flex align-items-center">
-          <mat-icon class="me-2">check_circle</mat-icon>
-          <span>Date selected: {{ selectedDate()!.toDateString() }}</span>
-        </div>
-      }
-    </mat-card-content>
-  </mat-card>
+    <div class="col-md-6 mb-4">
+      <mat-card class="h-100">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon class="me-2">schedule</mat-icon>
+            Step 3: Select Time Slot
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="mt-3">
+          <app-dropdown-filter
+            [options]="['Morning', 'Earlynoon', 'Latenoon', 'Evening', 'Night']"
+            label="Time Slot"
+            (valueChange)="onSlotChange($event)"
+          />
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
 
-  <!-- Step 3: Select Time Slot -->
-  <mat-card class="mb-4">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon class="me-2">schedule</mat-icon>
-        Step 3: Select Time Slot
-      </mat-card-title>
-    </mat-card-header>
-    <mat-card-content class="mt-3">
-      <app-dropdown-filter
-        [options]="['Morning', 'Earlynoon', 'Latenoon', 'Evening', 'Night']"
-        label="Time Slot"
-        (valueChange)="onSlotChange($event)"
-      />
-
-      @if (selectedSlot()) {
-        <div class="alert alert-success d-flex align-items-center mt-3">
-          <mat-icon class="me-2">check_circle</mat-icon>
-          <span>Time slot selected: {{ selectedSlot() }}</span>
-        </div>
-      }
-    </mat-card-content>
-  </mat-card>
-
-  <!-- Summary -->
-  @if (selectedDoctor() || selectedDate() || selectedSlot()) {
+  @if (selectedDoctor() || selectedDate()) {
     <mat-card class="mb-4">
       <mat-card-header>
         <mat-card-title>
@@ -167,10 +138,10 @@
             <h6 class="text-muted">Doctor</h6>
             @if (selectedDoctor()) {
               <p class="mb-3">
-                Dr. {{ selectedDoctor()!.firstName }} {{ selectedDoctor()!.lastName }}
+                Dr. {{ selectedDoctor()!.firstName| titlecase}} {{ selectedDoctor()!.lastName | titlecase }}
                 <br />
                 <small class="text-muted">{{
-                  getSpecializationName(selectedDoctor()!.specializationId)
+                  getSpecializationName(selectedDoctor()!.specializationId) | uppercase
                 }}</small>
               </p>
             } @else {
@@ -194,19 +165,14 @@
 
         @if (selectedDoctor()?.fee) {
           <div class="alert alert-info mt-3">
-            <strong>Consultation Fee:</strong> ${{ selectedDoctor()!.fee }}
+            <strong>Consultation Fee:</strong> {{ selectedDoctor()!.fee | currency: 'INR' }}
           </div>
         }
       </mat-card-content>
     </mat-card>
   }
 
-  <!-- Action Buttons -->
-  <div class="d-flex justify-content-end gap-2">
-    <button mat-stroked-button routerLink="/appointments" [disabled]="submitting()">
-      <mat-icon>cancel</mat-icon>
-      Cancel
-    </button>
+  <div class="d-flex justify-content-end">
     <button
       mat-raised-button
       color="primary"
@@ -223,7 +189,6 @@
   </div>
 </div>
 
-<!-- Styles -->
 <style>
   .doctor-card {
     transition: all 0.2s ease-in-out;

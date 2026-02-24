@@ -5,7 +5,6 @@ import { MaterialModule } from '../../ui/material.module';
   selector: 'app-pagination',
   imports: [ MaterialModule ],
   templateUrl: './pagination.component.html',
-  styleUrl: './pagination.component.css',
 })
 export class PaginationComponent {
   currentPage = input.required<number>();
@@ -15,7 +14,6 @@ export class PaginationComponent {
   pageSize = input<number>(10);
 
   pageChange = output<number>();
-  pageSizeChange = output<number>();
 
   getDisplayedPages(): (number | string)[] {
     const current = this.currentPage();
@@ -65,11 +63,6 @@ export class PaginationComponent {
     if (this.hasNext()) {
       this.pageChange.emit(this.currentPage() + 1);
     }
-  }
-
-  onPageSizeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    this.pageSizeChange.emit(+select.value);
   }
 
   isNumber(value: number | string): boolean {

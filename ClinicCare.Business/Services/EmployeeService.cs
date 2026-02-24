@@ -130,7 +130,7 @@ namespace ClinicCare.Business.Services
 
         public async Task<PaginatedResult<EmployeeResponseDto>> GetAllAsync(EmployeeSearchParams searchParams)
         {
-            if(_currentUser.Role != UserRole.Admin)
+            if(_currentUser.Role != UserRole.Admin && searchParams.Role == EmployeeRole.Admin)
                 throw new ForbiddenException("You are not authorized");
 
             var result = await _employeeRepo.GetAllAsync(searchParams);

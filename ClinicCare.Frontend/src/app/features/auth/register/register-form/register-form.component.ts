@@ -3,16 +3,14 @@ import {
   ReactiveFormsModule,
   FormBuilder,
   Validators,
-  ValidatorFn,
-  AbstractControl,
-  ValidationErrors,
 } from '@angular/forms';
 import { MaterialModule } from '../../../../shared/ui/material.module';
 import { Gender, PatientRegisterDto } from '../../../../shared/models/patient.model';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-register-form',
-  imports: [ReactiveFormsModule, MaterialModule],
+  imports: [ReactiveFormsModule, MaterialModule, RouterLink],
   templateUrl: './register-form.component.html',
 })
 export class RegisterFormComponent {

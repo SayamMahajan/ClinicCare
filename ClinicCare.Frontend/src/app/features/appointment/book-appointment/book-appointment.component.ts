@@ -17,6 +17,9 @@ import { AppointmentService } from '../../../services/appointment.service';
 import { SpecializationService } from '../../../services/specialization.service';
 import { AuthService } from '../../../services/auth.service';
 import { EmployeeSearchParams } from '../../../shared/models/pagination.model';
+import { CommonModule } from '@angular/common';
+import { PaymentService } from '../../../services/payment.service';
+import { PaymentCreateDto } from '../../../shared/models/payment.model';
 
 @Component({
   selector: 'app-book-appointment',
@@ -25,17 +28,21 @@ import { EmployeeSearchParams } from '../../../shared/models/pagination.model';
     ListFilterBarComponent,
     DropdownFilterComponent,
     PaginationComponent,
+    CommonModule
   ],
   templateUrl: './book-appointment.component.html',
 })
 export class BookAppointmentComponent implements OnInit, OnDestroy {
-  private dialog = inject(MatDialog);
-  private employeeService = inject(EmployeeService);
   private appointmentService = inject(AppointmentService);
   private authService = inject(AuthService);
+  private employeeService = inject(EmployeeService);
+  private paymentService = inject(PaymentService);
   private specializationService = inject(SpecializationService);
+
+  private dialog = inject(MatDialog);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+
   private destroy$ = new Subject<void>();
 
   patientId = this.authService.userId || '';
@@ -44,7 +51,7 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   specializationMap = signal<Map<string, string>>(new Map());
 
   search = signal('');
-  selectedSpecializationId = signal<string>('All');
+  selectedSpecializationId = signal<string>('');
 
   selectedDoctor = signal<EmployeeResponseDto | null>(null);
   selectedDate = signal<Date | null>(null);
@@ -55,7 +62,7 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   submitting = signal(false);
 
   currentPage = signal(1);
-  pageSize = signal(10);
+  pageSize = signal(3);
   totalPages = signal(0);
   hasPrevious = signal(false);
   hasNext = signal(false);
@@ -100,7 +107,7 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
       role: 'Doctor',
       searchTerm: this.search() || undefined,
       specializationId:
-        this.selectedSpecializationId() !== 'All'
+        this.selectedSpecializationId() !== ''
           ? this.selectedSpecializationId()
           : undefined,
     };
@@ -125,7 +132,9 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   }
 
   specializationOptions = computed(() => {
-    return ['All', ...Array.from(this.specializationMap().values())];
+  return Array.from(this.specializationMap().values())
+    .map(v => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase())
+    .sort();
   });
 
   getSpecializationName(id?: string): string {
@@ -151,13 +160,11 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
   }
 
   onSpecializationChange(value: string) {
-    let specializationId = 'All';
-    if (value !== 'All') {
-      for (const [id, name] of this.specializationMap().entries()) {
-        if (name === value) {
-          specializationId = id;
-          break;
-        }
+    let specializationId = '';
+    for (const [id, name] of this.specializationMap().entries()) {
+      if (name.toLowerCase() === value.toLowerCase()) {
+        specializationId = id;
+        break;
       }
     }
 
@@ -227,9 +234,9 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
         },
         { label: 'Date', value: this.selectedDate()!.toDateString() },
         { label: 'Time Slot', value: this.selectedSlot()! },
-        ...(doctor.fee ? [{ label: 'Consultation Fee', value: `$${doctor.fee}` }] : []),
+        ...(doctor.fee ? [{ label: 'Consultation Fee', value: `Rs${doctor.fee}` }] : []),
       ],
-      confirmText: 'Book Appointment',
+      confirmText: 'Pay & Book',
       cancelText: 'Edit',
     };
 
@@ -242,44 +249,54 @@ export class BookAppointmentComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirmed) => {
         if (confirmed) {
-          this.createAppointment();
+          this.payAndBook();
         }
       });
   }
 
-  createAppointment() {
+  payAndBook() {
+    this.submitting.set(true);
+
+    const doctor = this.selectedDoctor()!;
+
+    const paymentPayload: PaymentCreateDto = {
+      patientId: this.patientId,
+      doctorId: doctor.id,
+      amount: doctor.fee!,
+    };
+
+    this.paymentService.create(paymentPayload).subscribe({
+      next: (paymentId) => {
+        this.createAppointment(paymentId);
+      },
+      error: () => {
+        this.showError('Payment failed. Please try again.');
+        this.submitting.set(false);
+        console.log("Payment failed for payload:", paymentPayload)
+      },
+    });
+  }
+
+  createAppointment(paymentId: string) {
     const payload: AppointmentCreateDto = {
       patientId: this.patientId,
       doctorId: this.selectedDoctor()!.id,
       date: this.formatDate(this.selectedDate()!),
-      paymentId: '', 
+      paymentId: paymentId,
       timeSlot: this.selectedSlot()!,
     };
 
-    this.submitting.set(true);
-
-    this.appointmentService
-      .create(payload)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.showSuccess('Appointment booked successfully!');
-
-          this.selectedDoctor.set(null);
-          this.selectedDate.set(null);
-          this.selectedSlot.set(null);
-
-          setTimeout(() => {
-            this.router.navigate(['/appointments/scheduled']);
-          }, 1500);
-        },
-        error: (err) => {
-          console.error('Appointment creation failed', err);
-          this.showError('Failed to book appointment. Please try again.');
-          this.submitting.set(false);
-        },
-      });
+    this.appointmentService.create(payload).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.showSuccess('Appointment booked successfully!');
+        this.router.navigate(['/appointments/scheduled']);
+      },
+      error: () => {
+        this.showError('Failed to book appointment.');
+        this.submitting.set(false);
+      },
+    });
   }
 
   private formatDate(date: Date): string {

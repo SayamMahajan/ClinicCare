@@ -16,35 +16,49 @@ namespace ClinicCare.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<PaginatedResult<Prescription>> GetAllAsync(PrescriptionSearchParams searchParams, 
-            Guid? patientId = null, Guid? doctorId = null)
+        public async Task<PaginatedResult<Prescription>> GetAllAsync(
+            PrescriptionSearchParams searchParams,
+            Guid? patientId = null,
+            Guid? doctorId = null)
         {
             IQueryable<Prescription> query = _context.Prescriptions
                 .AsNoTracking()
-                .Include(p => p.Patient)
-                .Include(p => p.Doctor);
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Patient)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Doctor);
 
             if (!string.IsNullOrWhiteSpace(searchParams.SearchTerm))
             {
                 var searchTerm = searchParams.SearchTerm.Trim().ToLower();
+
                 query = query.Where(p =>
-                    EF.Functions.Like(p.Patient.FirstName.ToLower(), $"%{searchTerm}%") ||
-                    EF.Functions.Like(p.Patient.LastName.ToLower(), $"%{searchTerm}%") ||
-                    EF.Functions.Like(p.Doctor.FirstName.ToLower(), $"%{searchTerm}%") ||
-                    EF.Functions.Like(p.Doctor.LastName.ToLower(), $"%{searchTerm}%"));
+                    EF.Functions.Like(p.Appointment.Patient.FirstName.ToLower(), $"%{searchTerm}%") ||
+                    EF.Functions.Like(p.Appointment.Patient.LastName.ToLower(), $"%{searchTerm}%") ||
+                    EF.Functions.Like(p.Appointment.Doctor.FirstName.ToLower(), $"%{searchTerm}%") ||
+                    EF.Functions.Like(p.Appointment.Doctor.LastName.ToLower(), $"%{searchTerm}%")
+                );
             }
 
             if (patientId.HasValue)
-                query = query.Where(p => p.PatientId == patientId.Value);
+                query = query.Where(p =>
+                    p.Appointment.PatientId == patientId.Value);
 
             if (doctorId.HasValue)
-                query = query.Where(p => p.DoctorId == doctorId.Value);
+                query = query.Where(p =>
+                    p.Appointment.DoctorId == doctorId.Value);
+
+            if (searchParams.AppointmentId.HasValue)
+                query = query.Where(p =>
+                    p.AppointmentId == searchParams.AppointmentId.Value);
 
             if (searchParams.StartDate.HasValue)
-                query = query.Where(p => p.CreatedAt >= searchParams.StartDate.Value.ToDateTime(TimeOnly.MinValue));
+                query = query.Where(p =>
+                    p.CreatedAt >= searchParams.StartDate.Value.ToDateTime(TimeOnly.MinValue));
 
             if (searchParams.EndDate.HasValue)
-                query = query.Where(p => p.CreatedAt <= searchParams.EndDate.Value.ToDateTime(TimeOnly.MaxValue));
+                query = query.Where(p =>
+                    p.CreatedAt <= searchParams.EndDate.Value.ToDateTime(TimeOnly.MaxValue));
 
             return await GetPaginatedResultAsync(query, searchParams);
         }
@@ -54,8 +68,10 @@ namespace ClinicCare.DataAccess.Repositories
         {
             return await _context.Prescriptions
                 .AsNoTracking()
-                .Include(p => p.Doctor)
-                .Include(p => p.Patient)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Patient)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Doctor)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 

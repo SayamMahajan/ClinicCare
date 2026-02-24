@@ -49,14 +49,17 @@ namespace ClinicCare.Business.Services
         {
             ValidationHelper.GuidNotEmpty(id, nameof(id));
 
-            var prescription = await _prescriptionRepo.GetByIdAsync(id);
-            if (prescription == null)
-                throw new NotFoundException($"Prescription with id {id} not found.");
+            var prescription = await _prescriptionRepo.GetByIdAsync(id)
+                ?? throw new NotFoundException($"Prescription with id {id} not found.");
 
-            if (_currentUser.Role == UserRole.Patient && _currentUser.UserId != prescription.PatientId)
+            var appointment = prescription.Appointment;
+
+            if (_currentUser.Role == UserRole.Patient &&
+                _currentUser.UserId != appointment.PatientId)
                 throw new ForbiddenException("You are not authorized");
 
-            if (_currentUser.Role == UserRole.Doctor && _currentUser.UserId != prescription.DoctorId)
+            if (_currentUser.Role == UserRole.Doctor &&
+                _currentUser.UserId != appointment.DoctorId)
                 throw new ForbiddenException("You are not authorized");
 
             return MapToDto(prescription);
@@ -65,40 +68,31 @@ namespace ClinicCare.Business.Services
         public async Task<Guid> CreateAsync(PrescriptionCreateDto dto)
         {
             ValidationHelper.NotNull(dto, "Prescription data is required.");
-            ValidationHelper.GuidNotEmpty(dto.PatientId, "PatientId");
-            ValidationHelper.GuidNotEmpty(dto.DoctorId, "DoctorId");
-            ValidationHelper.GuidNotEmpty(dto.AppointmentId, "AppointmentId");
-
-            var appointment = await _appointmentRepo.GetByIdAsync(dto.AppointmentId);
-            if (appointment is null)
-                throw new BadRequestException($"Appointment {dto.AppointmentId} not found.");
-
-            if(appointment.PrescriptionId is not null)
-                throw new BadRequestException($"Appointment {dto.AppointmentId} already had prescription.");
+            ValidationHelper.GuidNotEmpty(dto.AppointmentId, nameof(dto.AppointmentId));
 
             if (_currentUser.Role != UserRole.Doctor)
-                throw new ForbiddenException(
-                    "Only doctors can create prescriptions.");
+                throw new ForbiddenException("Only doctors can create prescriptions.");
 
-            if (_currentUser.UserId != dto.DoctorId)
-                throw new ForbiddenException(
-                    "You can only create prescriptions for yourself.");
+            var appointment = await _appointmentRepo.GetByIdAsync(dto.AppointmentId)
+                ?? throw new BadRequestException($"Appointment {dto.AppointmentId} not found.");
 
-            var patient = await _patientRepo.GetByIdAsync(dto.PatientId);
-            if (patient is null)
-                throw new BadRequestException($"Patient with id {dto.PatientId} not found.");
+            if (appointment.DoctorId != _currentUser.UserId)
+                throw new ForbiddenException("You can only prescribe for your own appointments.");
+
+            if (appointment.Prescription is not null)
+                throw new BadRequestException("Prescription already exists for this appointment.");
 
             var prescription = new Prescription
             {
                 Id = Guid.NewGuid(),
-                PatientId = dto.PatientId,
-                DoctorId = dto.DoctorId,
+                AppointmentId = appointment.Id,
                 Description = JsonSerializer.Serialize(dto.Description)
             };
 
-
             await _prescriptionRepo.InsertAsync(prescription);
-            appointment.PrescriptionId = prescription.Id;
+
+            appointment.Prescription = prescription;
+
             await _prescriptionRepo.SaveChangesAsync();
 
             return prescription.Id;
@@ -126,20 +120,22 @@ namespace ClinicCare.Business.Services
 
         private static PrescriptionResponseDto MapToDto(Prescription p)
         {
+            var appointment = p.Appointment;
             return new PrescriptionResponseDto
             {
                 Id = p.Id,
+                AppointmentId = p.AppointmentId,
                 Patient = new PatientMiniDto
                 {
-                    Id = p.Patient.Id,
-                    FirstName = p.Patient.FirstName,
-                    LastName = p.Patient.LastName
+                    Id = appointment.Patient.Id,
+                    FirstName = appointment.Patient.FirstName,
+                    LastName = appointment.Patient.LastName
                 },
                 Doctor = new DoctorMiniDto
                 {
-                    Id = p.Doctor.Id,
-                    FirstName = p.Doctor.FirstName,
-                    LastName = p.Doctor.LastName
+                    Id = appointment.Doctor.Id,
+                    FirstName = appointment.Doctor.FirstName,
+                    LastName = appointment.Doctor.LastName
                 },
                 Description = Deserialize(p.Description),
                 CreatedAt = p.CreatedAt,

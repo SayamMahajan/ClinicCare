@@ -18,6 +18,8 @@ export class RegisterPageComponent {
 
   loading = signal(false);
 
+  imagePath = this.authService.bgImagePath;
+
   onRegister(data: PatientRegisterDto) {
     this.loading.set(true);
 

@@ -37,14 +37,14 @@ namespace ClinicCare.DataAccess.Models
 
         [Required]
         [Phone]
-        [MaxLength(15)]
+        [MinLength(10)]
+        [MaxLength(10)]
         public string Phone { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DoctorDetail? DoctorDetails { get; set; }
         public ICollection<Appointment> Appointments { get; set; } = [];
-        public ICollection<Payment> PaymentsReceived { get; set; } = [];
-        public ICollection<Prescription> PrescriptionsWritten { get; set; } = [];
+        public ICollection<Payment> Payments { get; set; } = [];
     }
 }

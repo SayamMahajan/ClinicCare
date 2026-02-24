@@ -41,10 +41,17 @@ namespace ClinicCare.DataAccess.Repositories
             if (doctorId.HasValue)
                 query = query.Where(a => a.DoctorId == doctorId.Value);
 
-            if (searchParams.Status.HasValue) query = query.Where(a => a.Status == searchParams.Status.Value);
-            if (searchParams.PrescriptionId.HasValue) query = query.Where(a => a.PrescriptionId == searchParams.PrescriptionId.Value);
-            if (searchParams.StartDate.HasValue) query = query.Where(a => a.Date >= searchParams.StartDate.Value);
-            if (searchParams.EndDate.HasValue) query = query.Where(a => a.Date <= searchParams.EndDate.Value);
+            if (searchParams.Status.HasValue) 
+                query = query.Where(a => a.Status == searchParams.Status.Value);
+
+            if (searchParams.PaymentId.HasValue)
+                query = query.Where(a => a.PaymentId == searchParams.PaymentId.Value); 
+
+            if (searchParams.StartDate.HasValue)
+                query = query.Where(a => a.Date >= searchParams.StartDate.Value);
+
+            if (searchParams.EndDate.HasValue) 
+                query = query.Where(a => a.Date <= searchParams.EndDate.Value);
 
             return await GetPaginatedResultAsync(query, searchParams);
         }
